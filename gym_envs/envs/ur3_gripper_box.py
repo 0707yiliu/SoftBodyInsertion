@@ -24,17 +24,17 @@ class ur3_gripper_box_env(gym.Env):
     def __init__(self):
 
         # loading model from xml file
-        self.model = load_model_from_path('gym_envs/models/ur3gripper.xml')
+        self.model = load_model_from_path('gym_envs/models/ur3gripper_finger_box.xml')
         self.sim = MjSim(self.model)
         self.data = self.sim.data
         self.viewer = mj.MjViewer(self.sim)
 
     def step(self, action):
-        self.sim.data.qpos[0] = remap(action[0], -1, 1, -30 / 180 * math.pi, 45 / 180 * math.pi)
-        self.sim.data.qpos[1] = remap(action[1], -1, 1, -105 / 180 * math.pi, -50 / 180 * math.pi)
-        self.sim.data.qpos[2] = remap(action[2], -1, 1, 0 / 180 * math.pi, 180 / 180 * math.pi)
-        self.sim.data.qpos[6] = 0.7
-        self.sim.data.qpos[10] = 0.7 # the qpos_6 and qpos_10 are used for robotiq 2F-85, they have the same value
+        self.sim.data.ctrl[0] = remap(action[0], -1, 1, -30 / 180 * math.pi, 45 / 180 * math.pi)
+        self.sim.data.ctrl[1] = remap(action[1], -1, 1, -105 / 180 * math.pi, -50 / 180 * math.pi)
+        self.sim.data.ctrl[2] = remap(action[2], -1, 1, 0 / 180 * math.pi, 180 / 180 * math.pi)
+
+        self.sim.data.ctrl[6] = 0.2 # finger-joint controller
         self.sim.step()
         # print(self.sim.get_state())
         return self.sim.get_state()[:4]
