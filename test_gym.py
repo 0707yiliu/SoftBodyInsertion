@@ -1,28 +1,29 @@
 import gym
 import gym_envs
-from stable_baselines3 import SAC
+from stable_baselines3 import PPO 
 
 env = gym.make('ur3-pih-box-v0')
 env.reset()
-# observation, reward, done, info = env.step([0.2, -0.2, 0.4, -1])
-# print(env.model.joint_names)
+
 while True:
-    observation, reward, done, info= env.step([0.2, -0.2, 0.4, -1])
-    env.render(True)
+  
+  observation, reward, done, _ = env.step([0.2, -0.2, 0.4, -1])
+  env.render(False)
 
 
 
 
 # import gym
 
-# from stable_baselines3 import A2C
+# from stable_baselines3 import PPO, SAC
 
 # env = gym.make('CartPole-v1')
 
-# model = A2C('MlpPolicy', env, verbose=1)
-# model.learn(total_timesteps=10000)
+# model = PPO('MlpPolicy', env, verbose=1)
+# model.learn(total_timesteps=2e4)
 
 # obs = env.reset()
+# print("over learning. ------------------------------------------")
 # for i in range(1000):
 #     action, _state = model.predict(obs, deterministic=True)
 #     obs, reward, done, info = env.step(action)

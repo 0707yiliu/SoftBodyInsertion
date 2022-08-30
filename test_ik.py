@@ -74,7 +74,7 @@ from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
 # from kdl_parser.urdf_parser_py.kdl_parserTree import urdf_tree # it contains the kdl_tree_from_urdf_model
 
 
-robot = URDF.from_xml_file("/home/yi/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur3_robot.urdf")
+robot = URDF.from_xml_file("gym_envs/models/ur3_robot.urdf")
 tree = kdl_tree_from_urdf_model(robot)
 
 print(tree.getNrOfSegments())
