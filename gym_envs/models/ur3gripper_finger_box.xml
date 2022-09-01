@@ -28,7 +28,7 @@ Control Engineering / Automation Engineering
         <geom contype='1' conaffinity='1' condim='4'  margin="1e-3" solref=".01 1" solimp=".99 .99 .01" />
         <joint armature="0.01" damping=".1"/>
         <default class="UR3">
-            <joint damping='65'/>
+            <joint damping='60'/>
         </default>
         <default class="UR3e">
             <joint damping='45'/>
@@ -120,7 +120,7 @@ Control Engineering / Automation Engineering
         <geom name='floor' material="floor_mat" pos='0 0 0' size='2.5 2.5 0.1'  type='plane' />
 	
         
-        <body name="OBJ_TABLE" pos="0 0.65 0.435">
+        <body name="OBJ_TABLE" pos="0 0.5 0.435">
             <!--<geom size=".3 .2 .435" type="box" material="bench_mat"/>-->
             <geom size=".6 .3 .03" pos ="0 0 0.4" type="box" material="bench_mat"/>
             <geom size=".6 .3 .03" pos ="0 0 -0.2" type="box" material="bench_mat"/>
@@ -178,11 +178,11 @@ Control Engineering / Automation Engineering
             <geom size=".04 .04 .435" pos ="-.26 -.16 0" type="box" material="bench_mat"/>
             <inertial pos="0 0 0" mass="1000" diaginertia="0 0 0" />
         
-            <body name="base_link" pos="0 0 0.435">
-                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="2" diaginertia="0.005625 0.00305317 0.00305317" />
+            <body name="base_link" pos="0 0 0.425">
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20" diaginertia="0.005625 0.00305317 0.00305317" />
                 <geom type="mesh"  mesh="base" material="ur3_mat"/>
                 <body name="shoulder_link" pos="0 0 0.1530">
-                    <inertial pos="0 0 0" mass="2" diaginertia="0.00809316 0.00809316 0.005625" />
+                    <inertial pos="0 0 0" mass="10" diaginertia="0.00809316 0.00809316 0.005625" />
                     <joint name="shoulder_pan_joint" class="UR3" pos="0 0 0" axis="0 0 1" limited="true" range="-3.14159 3.14159" />
                     <geom type="mesh"  mesh="shoulder" material="ur3_mat"/>
                     <body name="upper_arm_link" pos="0 0.1198 0" quat="0.707107 0 0.707107 0">
@@ -190,11 +190,11 @@ Control Engineering / Automation Engineering
                         <joint name="shoulder_lift_joint" class="UR3" pos="0 0 0" axis="0 1 0" limited="true" range="-3.14159 3.14159" />
                         <geom type="mesh"  mesh="upperarm" material="ur3_mat"/>
                         <body name="forearm_link" pos="0 -0.0925 0.24365">
-                            <inertial pos="0 0 0.106625" mass="1.26" diaginertia="0.00654681 0.00654681 0.00354375" />
+                            <inertial pos="0 0 0.106625" mass="3.26" diaginertia="0.00654681 0.00654681 0.00354375" />
                             <joint name="elbow_joint" class="UR3" pos="0 0 0" axis="0 1 0" limited="true" range="-3.14159 3.14159" />
                             <geom type="mesh"  mesh="forearm" material="ur3_mat"/>
                             <body name="wrist_1_link" pos="0 0 0.21325" quat="0.707107 0 0.707107 0">
-                                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="0.8" diaginertia="0.00225 0.002085 0.002085" />
+                                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="1.8" diaginertia="0.00225 0.002085 0.002085" />
                                 <joint name="wrist_1_joint" class="UR3e" pos="0 0 0" axis="0 1 0" limited="true" range="-6.28319 6.28319" />
                                 <geom type="mesh"  mesh="wrist1" material="ur3_mat"/>
                                 <body name="wrist_2_link" pos="0 0.08505 0">
@@ -205,11 +205,8 @@ Control Engineering / Automation Engineering
                                         <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="0.35" diaginertia="0.000984375 0.000912187 0.000912187" />
                                         <joint name="wrist_3_joint" class="UR3e" pos="0 0 0" axis="0 1 0" limited="true" range="-6.28319 6.28319" />
                                         <geom name="wrist_3_link" type="mesh"  mesh="wrist3" material="ur3_mat" rgba="1 0 0 1"/>
-                                        <body name="eef" pos="0 0.25 0">
-                                            <site name="ee_tool" pos="0 0 0" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
-                                        </body>
                                         <!--GRIPPER-->
-                                        <body name="ee_link" pos="0 0.0819 0" quat="0.5 -0.5 0.5 0.5">
+                                        <body name="ee_link" pos="0 0.0819 0" quat="0.707107 -0.707107 0 0">
                                             <inertial pos="-0.01 0 0" mass="0.001" diaginertia="1.66667e-08 1.66667e-08 1.66667e-08" />
                                             <geom size="0.005 0.005 0.005" pos="-0.01 0 0" type="box" />
                                             <geom name="light_1" type="sphere" size="0.005" pos="0.035 0 0.0166" material="Light" />
@@ -218,39 +215,39 @@ Control Engineering / Automation Engineering
                                             <geom name="gripperpalm" type="mesh" mesh="gripperpalm" pos="0 0 0.0016" quat="0.707107 0 -0.707107 0" material="GriMat" />
                                             <body name="right_driver" pos="0 -0.0306011 0.054904" quat="0.707107 0 -0.707107 0">
                                                 <geom name="right_driver_mesh" type="mesh" mesh="link_3" material="GriMat" contype="0" conaffinity="0" />
-                                                <joint name="right_driver_1" axis="0 0 1" type="hinge" limited="true" range="-0.1 0.8" />
+                                                <joint name="right_driver_1" damping="1"  axis="0 0 1" type="hinge" limited="true" range="-0.1 0.8" />
                                                 <body name="right_coupler" pos="0 -0.0315 0">
                                                     <geom name="right_coupler_mesh" type="mesh" mesh="link_0" material="GriMat" contype="0" conaffinity="0" />
-                                                    <joint name="right_driver_2" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.01" />
+                                                    <joint name="right_driver_2" damping="1" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.8" />
                                                     <body name="right_follower_link" pos="0.0475 -0.006 0">
                                                         <geom name="right_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="link_1" material="GriMat" />
-                                                        <joint name="right_driver_3" axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" />
+                                                        <joint name="right_driver_3" damping="1"  axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" />
                                                         <body name="right_finger" pos="0.00965 0.004 -0.013" quat="-0.5 0.5 0.5 0.5">
                                                             <geom name="right_finger_mesh" pos="0 0 0" type="mesh" mesh="finger" material="FingerMat" />
                                                             <!-- <joint name="right_driver_3" axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" /> -->
                                                             <body name="right_finger_tac1" pos="0.0058 0.01605 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
-                                                                <site name="right_touch_sensor1" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
+                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <site name="right_touch_sensor1" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac2" pos="0.0058 0.03915 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
-                                                                <site name="right_touch_sensor2" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
+                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <site name="right_touch_sensor2" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac3" pos="0.0194 0.03915 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
-                                                                <site name="right_touch_sensor3" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
+                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <site name="right_touch_sensor3" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac4" pos="0.0194 0.01605 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
-                                                                <site name="right_touch_sensor4" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
+                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <site name="right_touch_sensor4" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac5" pos="0.0114 0.05965 0.0075 " quat="0.5 0.5 -0.5 -0.5  ">
-                                                                <geom type="mesh" mesh="fingertip" rgba="0 0.9 0 1" />
-                                                                <site name="right_touch_sensor5" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
+                                                                <geom type="mesh" mesh="fingertip" rgba="0.9 0 0 1" />
+                                                                <site name="right_touch_sensor5" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac6" pos="0.0257 0.05965 0.0075 " quat="0.5 0.5 -0.5 -0.5  ">
-                                                                <geom type="mesh" mesh="fingertip" rgba="0 0.9 0 1" />
-                                                                <site name="right_touch_sensor6" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
+                                                                <geom type="mesh" mesh="fingertip" rgba="0.9 0 0 1" />
+                                                                <site name="right_touch_sensor6" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                         </body>
                                                     </body>
@@ -258,17 +255,17 @@ Control Engineering / Automation Engineering
                                             </body>
                                             <body name="right_spring_link" pos="0.0016 -0.012 0.0614" quat="0.707107 0 -0.707107 0">
                                                 <geom name="right_spring_mesh" type="mesh" pos="0 -0.0005 0.0016" mesh="link_2" material="GriMat" contype="0" conaffinity="0" />
-                                                <joint name="right_driver_4" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.8" />
+                                                <joint name="right_driver_4" damping="0.1" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.8" />
                                             </body>
                                             <body name="left_driver" pos="0 0.0306011 0.054904" quat="0 0.707107 0 0.707107">
                                                 <geom name="left_driver_mesh" type="mesh" mesh="link_3" material="GriMat" contype="0" conaffinity="0" />
-                                                <joint name="left_driver_1" axis="0 0 1" type="hinge" limited="true" range="-0.1 0.8" />
+                                                <joint name="left_driver_1" damping="1"  axis="0 0 1" type="hinge" limited="true" range="-0.1 0.8" />
                                                 <body name="left_coupler" pos="0 -0.0315 0">
                                                     <geom name="left_coupler_mesh" type="mesh" mesh="link_0" material="GriMat" contype="0" conaffinity="0" />
-                                                    <joint name="left_driver_2" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.01" />
+                                                    <joint name="left_driver_2" damping="1"  axis="0 0 1" type="hinge" limited="true" range="-0.01 0.01" />
                                                     <body name="left_follower_link" pos="0.0475 -0.006 0">
                                                         <geom name="left_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="link_1" material="GriMat" />
-                                                        <joint name="left_driver_3" axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" />
+                                                        <joint name="left_driver_3" damping="1"  axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" />
                                                         <body name="left_finger" pos="0.00965 0.004 -0.013" quat="-0.5 0.5 0.5 0.5">
                                                             <geom name="left_finger_mesh" pos="0 0 0" type="mesh" mesh="finger" material="FingerMat" />
                                                             <!-- <joint name="right_driver_3" axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" /> -->
@@ -302,7 +299,11 @@ Control Engineering / Automation Engineering
                                             </body>
                                             <body name="left_spring_link" pos="0.0016 0.012 0.0614" quat="0 0.707107 0 0.707107">
                                                 <geom name="left_spring_mesh" type="mesh" pos="0 0.0005 0.0016" mesh="link_2" material="GriMat" contype="0" conaffinity="0" />
-                                                <joint name="left_driver_4" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.8" />
+                                                <joint name="left_driver_4" damping="0.1" axis="0 0 1" type="hinge" limited="true" range="-0.01 0.8" />
+                                            </body>
+                                            <body name="eef" pos="0 0 0.15">
+                                                <!-- <geom type="mesh" mesh="fingertip" rgba="0 0.9 0 1" /> -->
+                                                <site name="ee_tool" pos="0 0 0" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                             </body>
                                         </body>
                                     </body>
@@ -316,34 +317,32 @@ Control Engineering / Automation Engineering
                 </body>
             </body>
         </body>	
-        <body name="cylinder_obj" pos="0 0.5 1">>
-            <geom name="cylinder1" type="box" size=".024 .024 .08"  euler="0 0 0" rgba="0 0.5 0.5 1"/>
+        <body name="cylinder_obj" pos="-0.3 0.28 0.95">>
+            <geom name="cylinder1" type="box" size=".023 .023 .06"  euler="0 0 0" rgba="0 0.5 0.5 1"/>
             <joint type="free"/>
-	        <inertial pos="0 0 0"  mass="0.2" diaginertia="1 1 1" />
+	        <inertial pos="0 0 0"  mass="2" diaginertia="1 1 1" />
         </body>
     </worldbody>
 
     <equality>
-        <connect body1="right_follower_link" body2="right_coupler" anchor="0 0 0" solref="0.02 0.15" />
-        <connect body1="right_follower_link" body2="right_spring_link" anchor="0.004 0.0175 0" solref="0.02 0.15" />
-		<connect body1="right_driver" body2="right_coupler" anchor="0.004 0.0175 0" solref="0.02 0.15" />
+        <connect body1="right_follower_link" body2="right_coupler" anchor="0 0 0" solref="0.01 0.5" active="true"/>
+        <connect body1="right_follower_link" body2="right_spring_link" anchor="0.0054 0.019 0" solref="0.01 0.5" />
+		<connect body1="right_driver" body2="right_coupler" anchor="0 0 0" solref="0.01 0.5" />
 
-        <connect body1="left_follower_link" body2="left_coupler" anchor="0 0 0" solref="0.02 0.15" />
-        <connect body1="left_follower_link" body2="left_spring_link" anchor="0.004 0.0175 0" solref="0.02 0.15" />
-        <connect body1="left_driver" body2="left_coupler" anchor="0.004 0.0175 0" solref="0.02 0.15" />
+        <connect body1="left_follower_link" body2="left_coupler" anchor="0 0 0" solref="0.01 0.5" />
+        <connect body1="left_follower_link" body2="left_spring_link" anchor="0.0054 0.019 0" solref="0.01 0.5" />
+        <connect body1="left_driver" body2="left_coupler" anchor="0 0 0" solref="0.01 0.5"/>
 
-        <joint name="symmetry:control" joint1="right_driver_1" joint2="left_driver_1" polycoef="0 1 0 0 0" />
-
-	<!-- <weld name="OUR_TABLE"    body1="OUR_TABLE"   body2="box"  />    -->
+        <joint name="symmetry:control" joint1="right_driver_1" joint2="left_driver_1" polycoef="0 1 0 0 0"/>
 	</equality>
 
     <actuator>
         <position name='shoulder_pan' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='shoulder_pan_joint' kp="500"/>
         <position name='shoulder_lift' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='shoulder_lift_joint' kp="500"/>
         <position name='forearm' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='elbow_joint' kp="500"/>
-        <position name='wrist_1' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_1_joint' kp="100"/>
-        <position name='wrist_2' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_2_joint' kp="100"/>
-        <position name='wrist_3' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_3_joint' kp="100"/>
+        <position name='wrist_1' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_1_joint' kp="300"/>
+        <position name='wrist_2' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_2_joint' kp="300"/>
+        <position name='wrist_3' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_3_joint' kp="300"/>
 
         <!-- <motor name='shoulder_pan_T' ctrllimited="true" ctrlrange="-2 2" joint='shoulder_pan_joint' gear="101"/> 
         <motor name='shoulder_lift_T' ctrllimited="true" ctrlrange="-2 2" joint='shoulder_lift_joint' gear="101"/>
@@ -360,7 +359,7 @@ Control Engineering / Automation Engineering
         <velocity name='wrist_3_v' class="UR5" joint='wrist_3_joint'/>-->
 
         <!--Gripper-->
-        <position name='grippercontrol' ctrllimited="true" kp="10" joint='left_driver_1' ctrlrange='0 0.715'/>
+        <position name='grippercontrol' ctrllimited="true" kp="10" joint='left_driver_1' ctrlrange='0 0.715' />
         <!-- <position name="close_r" joint="right_driver_1" ctrllimited="true" ctrlrange="-1 1" kp="3"/> -->
         <!-- <position name="close_l" joint="left_driver_1" ctrllimited="true" ctrlrange="-1 1" kp="3"/> -->
         <!-- <position name='finger_1' ctrllimited="true" kp="20" joint='right_driver_1' ctrlrange='0 1.2217'/>

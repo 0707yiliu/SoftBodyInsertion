@@ -17,27 +17,31 @@ import logging
 import gym
 import matplotlib as mpl
 import os
+import copy
 
 from gym import error, spaces, utils
 from gym.utils import seeding
+from scipy.spatial.transform import Rotation as R
 
 import ur3_kdl_func
 
 
-initial_pos = [-90 / 180 * math.pi, -100 / 180 * math.pi, -120 / 180 * math.pi,
+initial_pos = [90 / 180 * math.pi, -90 / 180 * math.pi, 90 / 180 * math.pi,
                -90 / 180 * math.pi, -90 / 180 * math.pi, 0,
                0, 0, 0, 0, 0, 0, 0, 0] # ur3 + robotiq 2F-85
-dof = len(initial_pos)
 joint_limit_lower = [-3.14, -3.14, -3.14, -3.14, -3.14, -3.14]
 joint_limit_upper = [3.14, 3.14, 3.14, 3.14, 3.14, 3.14]
-action_limit_lower = [-0.01, -0.01, -0.01, -0.314, -0.314, -0.314]
-action_limit_upper = [0.01, 0.01, 0.01, 0.314, 0.314, 0.314]
+action_limit_lower = np.array([-0.01, -0.01, -0.01, -0.314, -0.314, -0.314, -0.07])
+action_limit_lower = action_limit_lower/10.0
+action_limit_upper = np.array([0.01, 0.01, 0.01, 0.314, 0.314, 0.314, 0.07])
+action_limit_upper = action_limit_upper/10.0
 
 fktestpose = [-1.5, -0.3, 0.3, 0.3, 0.3, -0.3] # testing
 obs_dim = 29 # 12 + 6 + 3 + 1 + 7 
 action_dim = 6
 weight_obj_hole_z_axis = 0.7
 weight_touch_tip = 0.65
+z_quat = [0, 1,  0,  0] #  wxyz
 # ------------- hard code --------------------------
 
 
@@ -52,6 +56,10 @@ class ur3_gripper_box_env(gym.Env):
         self.done = False
 
         self.obs = np.zeros(obs_dim)
+        self.goal_pos = np.zeros(3)
+        self.goal_rot = np.zeros(3)
+        self.goal_quat = np.zeros(4)
+        self.goal_quat[0] = 1
         self.reward = -10
         
         self.joint_list = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
@@ -88,33 +96,93 @@ class ur3_gripper_box_env(gym.Env):
         # # self.sim.data.ctrl[0] = remap(action[0], -1, 1, -30 / 180 * math.pi, 45 / 180 * math.pi)
         # # self.sim.data.ctrl[1] = remap(action[1], -1, 1, -105 / 180 * math.pi, -50 / 180 * math.pi)
         # # self.sim.data.ctrl[2] = remap(action[2], -1, 1, 0 / 180 * math.pi, 180 / 180 * math.pi)
-        self.get_observation()
-        self.goal_pos = self.obs[i+self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3]
-        qpos = joint_limitation(ur3_kdl_func.inverse(goal_pos, goal_rot), joint_limit_lower, joint_limit_upper)
-        for i in range(6):
-            self.sim.data.ctrl[i] = qpos[i]
+        #! -------------------- initial pos ------------------
+        if self.reset_flag is True:
+            self.obj_init_pos = copy.deepcopy(self.sim.data.get_body_xpos("cylinder_obj"))
+            self.obj_init_pos[-1] += 0.251
+            # print(self.obj_init_pos)
+            self.obj_init_quat = np.roll(np.array(z_quat), -1)
+            # inv_test_pos = [0.15,      0.38,     1.206475]
+            # inv_test_pos = self.sim.data.get_body_xpos("eef")
+            self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+            for i in range(6):
+                self.sim.data.ctrl[i] = self.qpos[i]
+            # print("qpos:", self.qpos)
+            # ur3_kdl_func.forward(initial_pos)
+            print("obj_pos:", self.sim.data.get_body_xpos("cylinder_obj"))
+            print("ee_pos:", self.sim.data.get_body_xpos("eef"))
+            print("ee_quat:", self.sim.data.get_body_xquat("eef"))
+            if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
+                self.obj_init_pos[-1] -= 0.0815
+                self.reset_flag = False
+        if self.get_obj is False and self.reset_flag is False:
+            self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+            for i in range(6):
+                self.sim.data.ctrl[i] = self.qpos[i]
+            if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
+                self.sim.data.ctrl[6] = 0.5
+        print("touch_sensor ----------------------")
+        for i in range(self.tac_sensor_num):
+            print(self.sim.data.get_sensor(self.tac_sensor_list[i]))
+            # self.qpos = joint_limitation(ur3_kdl_func.inverse(obj_init_pos, self.goal_quat), joint_limit_lower, joint_limit_upper)
+        #! ------------------ generating new action for env ---------------------------
+        #! getting the UR3-joint statement and the obj pos, statement + action[]
+        # self.eef_quat = self.sim.data.get_body_xquat("eef")
+        # for i in range(3):
+        #     self.goal_pos[i] = self.obs[i+self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3]
+        # for i in range(4):
+        #     self.goal_quat[i] = self.obs[i+3+self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3]
+        # self.goal_rot = np.array(R.from_quat([self.goal_quat[1], self.goal_quat[2], self.goal_quat[3], self.goal_quat[0]]).as_euler('zyx', degrees=False))
+        # self.gripper_joint = self.obs[self.joint_num+self.tac_sensor_num]
+        # self.get_statement()
+
+        # # TODO: the actions are incremental, so they need to be added into observation above
+        # #! actions: delta-eef-pos(3-dim) delta-eef-rot(3-dim) delta-gripper-joint(1-dim)
+        # for i in range(3):
+        #     self.goal_pos[i] += action[i]
+        #     self.goal_rot[i] += action[i+3]
+        # self.gripper_joint += action[-1]
+        # if self.gripper_joint > 0.7:
+        #     self.gripper_joint = 0.7
+        # if self.gripper_joint <= 0:
+        #     self.gripper_joint = 0
+        # self.goal_quat = np.array(R.from_euler('zyx', [self.goal_rot[0], self.goal_rot[1], self.goal_rot[2]], degrees=False).as_quat())
+        # self.qpos = joint_limitation(ur3_kdl_func.inverse(self.goal_pos, self.goal_quat), joint_limit_lower, joint_limit_upper)
+        # for i in range(6):
+        #     self.sim.data.ctrl[i] = self.qpos[i]
+        
         # print("base_link pos:", self.sim.data.get_body_xpos("base_link"))
         # print("mujoco ee_link pos:", self.sim.data.get_body_xpos("ee_link"))
         # print("gripper end-effector pos:", self.sim.data.get_body_xquat("eef"))
         # print("tactile sensor:", self.sim.data.get_sensor("touchsensor_r1"))
-        self.sim.data.ctrl[6] = 0.5 # finger-joint controller
+        # for i in range(self.joint_num):
+        #     self.obs[i] = self.sim.data.get_joint_qpos(self.joint_list[i])
+        # self.sim.data.ctrl[6] = 0.5 # finger-joint controller
+        # time.sleep(0.01)
         self.sim.step()
         self.get_observation()
         self.get_reward()
         if self.reward > 60:
             self.done = True
+        # print(self.sim.data.get_body_xquat("eef"))
         # print(self.obs)
         # print(self.reward)
         self.info = {"the processing is going on."}
+        # time.sleep(0.01)
         return self.obs, self.reward, self.done, self.info
 
     def reset(self):
+        self.reset_flag = True
+        self.get_obj = False
         self.done = False
         self.obj_num = random.randint(0, len(self.obj_list))
-        self.obj_num = 0 # single object now
+        self.obj_num = 0 # single object now  (0:box) 
+        self.hole_num = random.randint(0, len(self.hole_list))
+        self.hole_num = 0 # single object now  (0:box_hole) 
         sim_state = self.sim.get_state()
-        for i in range(dof):
+        for i in range(self.joint_num):
             sim_state.qpos[i] = initial_pos[i]
+        
         self.sim.set_state(sim_state)   
         self.sim.forward()
         print("reset success")
@@ -161,6 +229,13 @@ class ur3_gripper_box_env(gym.Env):
             else:
                 self.touch_strength += (1 - weight_touch_tip) * self.obs[i+self.joint_num]
         self.reward = self.dis_obj_hole + self.touch_strength
+    
+    def get_statement(self):
+        for i in range(3):
+            self.eef_pos[i] = self.sim.data.get_body_xpos("eef")[i]
+        for i in range(4):
+            self.eef_quat[i] = self.sim.data.get_body_xquat("eef")[i]
+
 
 
 def remap(x, lb, ub, LB, UB):
@@ -174,6 +249,3 @@ def joint_limitation(qpos, j_lower, j_upper):
         while qpos[i] > j_upper[i]:
             qpos[i] = qpos[i] - math.pi
     return qpos
-
-
-

@@ -6,9 +6,8 @@ env = gym.make('ur3-pih-box-v0')
 env.reset()
 
 while True:
-  
-  observation, reward, done, _ = env.step([0.2, -0.2, 0.4, -1])
-  env.render(False)
+  observation, reward, done, _ = env.step(env.action_space.sample())
+  env.render(True)
 
 
 
