@@ -67,7 +67,7 @@ Control Engineering / Automation Engineering
         <mesh name="link_1" file="robotiq_85_finger_tip_link.stl" />
         <mesh name="link_2" file="robotiq_85_inner_knuckle_link.stl" />
         <mesh name="link_3" file="robotiq_85_knuckle_link.stl" />
-        <mesh name="finger" file="finger_test.stl" />
+        <mesh name="finger" file="finger_tip_.stl" />
         <mesh name="fingertip" file="fingertip_test.stl" />
 
         <mesh name="BOX"   file="BOX.stl"/>
@@ -132,7 +132,7 @@ Control Engineering / Automation Engineering
         </body>
         
 
-        <body name="box" pos="-0.3 0.6 0.88">
+        <body name="box" pos="0 0.3 0.87">
 		    <body name="collision">
 		
                 <geom name="box_part_1" pos="0 0 -0.03" mesh="1" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="6700" friction="0.95 0.3 0.1" 		    material="metal_box" group="1" condim="4" rgba="0 1 0 1"  />
@@ -179,10 +179,10 @@ Control Engineering / Automation Engineering
             <inertial pos="0 0 0" mass="1000" diaginertia="0 0 0" />
         
             <body name="base_link" pos="0 0 0.425">
-                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="20" diaginertia="0.005625 0.00305317 0.00305317" />
+                <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="5" diaginertia="0.005625 0.00305317 0.00305317" />
                 <geom type="mesh"  mesh="base" material="ur3_mat"/>
                 <body name="shoulder_link" pos="0 0 0.1530">
-                    <inertial pos="0 0 0" mass="10" diaginertia="0.00809316 0.00809316 0.005625" />
+                    <inertial pos="0 0 0" mass="4" diaginertia="0.00809316 0.00809316 0.005625" />
                     <joint name="shoulder_pan_joint" class="UR3" pos="0 0 0" axis="0 0 1" limited="true" range="-3.14159 3.14159" />
                     <geom type="mesh"  mesh="shoulder" material="ur3_mat"/>
                     <body name="upper_arm_link" pos="0 0.1198 0" quat="0.707107 0 0.707107 0">
@@ -226,27 +226,33 @@ Control Engineering / Automation Engineering
                                                             <geom name="right_finger_mesh" pos="0 0 0" type="mesh" mesh="finger" material="FingerMat" />
                                                             <!-- <joint name="right_driver_3" axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" /> -->
                                                             <body name="right_finger_tac1" pos="0.0058 0.01605 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0.9 0 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="right_touch_sensor1" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac2" pos="0.0058 0.03915 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0.9 0 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="right_touch_sensor2" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac3" pos="0.0194 0.03915 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0.9 0 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="20"/>
                                                                 <site name="right_touch_sensor3" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                             <body name="right_finger_tac4" pos="0.0194 0.01605 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0.9 0 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0.9 0 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="20"/>
                                                                 <site name="right_touch_sensor4" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
-                                                            <body name="right_finger_tac5" pos="0.0114 0.05965 0.0075 " quat="0.5 0.5 -0.5 -0.5  ">
-                                                                <geom type="mesh" mesh="fingertip" rgba="0.9 0 0 1" />
+                                                            <body name="right_finger_tac5" pos="0.0114 0.05965 0.004" quat="0.5 0.5 -0.5 -0.5  ">
+                                                                <geom type="mesh" mesh="fingertip" friction="1 1 1"  rgba="0.9 0 0 1" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="20"/>
                                                                 <site name="right_touch_sensor5" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
-                                                            <body name="right_finger_tac6" pos="0.0257 0.05965 0.0075 " quat="0.5 0.5 -0.5 -0.5  ">
-                                                                <geom type="mesh" mesh="fingertip" rgba="0.9 0 0 1" />
+                                                            <body name="right_finger_tac6" pos="0.0257 0.05965 0.004" quat="0.5 0.5 -0.5 -0.5  ">
+                                                                <geom type="mesh" mesh="fingertip" friction="1 1 1"  rgba="0.9 0 0 1" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="20"/>
                                                                 <site name="right_touch_sensor6" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.1 0.2 0.3 1"/>
                                                             </body>
                                                         </body>
@@ -270,27 +276,33 @@ Control Engineering / Automation Engineering
                                                             <geom name="left_finger_mesh" pos="0 0 0" type="mesh" mesh="finger" material="FingerMat" />
                                                             <!-- <joint name="right_driver_3" axis="0 0 1" type="hinge" limited="true" range="-0.8 0.01" /> -->
                                                             <body name="left_finger_tac1" pos="0.0058 0.01605 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0 0.9 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="left_touch_sensor1" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                                             </body>
                                                             <body name="left_finger_tac2" pos="0.0058 0.03915 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0 0.9 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="left_touch_sensor2" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                                             </body>
                                                             <body name="left_finger_tac3" pos="0.0194 0.03915 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0 0.9 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="left_touch_sensor3" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                                             </body>
                                                             <body name="left_finger_tac4" pos="0.0194 0.01605 0.028" quat="1 0 0 0">
-                                                                <geom type="box" rgba="0 0.9 0 1" size="0.0056 0.01 0.001" />
+                                                                <geom type="box" rgba="0 0.9 0 1" friction="1 1 1"  size="0.005 0.008 0.001" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="left_touch_sensor4" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                                             </body>
-                                                            <body name="left_finger_tac5" pos="0.0114 0.05965 0.0075 " quat="0.5 0.5 -0.5 -0.5">
-                                                                <geom type="mesh" mesh="fingertip" rgba="0 0.9 0 1" />
+                                                            <body name="left_finger_tac5" pos="0.0114 0.05965 0.004" quat="0.5 0.5 -0.5 -0.5">
+                                                                <geom type="mesh" mesh="fingertip" friction="1 1 1"  rgba="0 0.9 0 1" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="left_touch_sensor5" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                                             </body>
-                                                            <body name="left_finger_tac6" pos="0.0257 0.05965 0.0075 " quat="0.5 0.5 -0.5 -0.5">
-                                                                <geom type="mesh" mesh="fingertip" rgba="0 0.9 0 1" />
+                                                            <body name="left_finger_tac6" pos="0.0257 0.05965 0.004" quat="0.5 0.5 -0.5 -0.5">
+                                                                <geom type="mesh" mesh="fingertip" friction="1 1 1"  rgba="0 0.9 0 1" />
+                                                                <joint  type="slide" pos="0 0 0" stiffness="40" axis="0 0 1" limited="true" range="-0.0003 0.0003" damping="10"/>
                                                                 <site name="left_touch_sensor6" pos="0 0 0.01" size="1 1 1" type="box" rgba="0.3 0.2 0.1 1"/>
                                                             </body>
                                                         </body>
@@ -318,7 +330,7 @@ Control Engineering / Automation Engineering
             </body>
         </body>	
         <body name="cylinder_obj" pos="-0.3 0.28 0.95">>
-            <geom name="cylinder1" type="box" size=".023 .023 .06"  euler="0 0 0" rgba="0 0.5 0.5 1"/>
+            <geom name="cylinder1" friction="1 1 1" type="box" size=".023 .023 .06"  euler="0 0 0" rgba="0 0.5 0.5 1"/>
             <joint type="free"/>
 	        <inertial pos="0 0 0"  mass="2" diaginertia="1 1 1" />
         </body>
@@ -326,11 +338,11 @@ Control Engineering / Automation Engineering
 
     <equality>
         <connect body1="right_follower_link" body2="right_coupler" anchor="0 0 0" solref="0.01 0.5" active="true"/>
-        <connect body1="right_follower_link" body2="right_spring_link" anchor="0.0054 0.019 0" solref="0.01 0.5" />
+        <connect body1="right_follower_link" body2="right_spring_link" anchor="0.0054 0.0192 0" solref="0.01 0.5" />
 		<connect body1="right_driver" body2="right_coupler" anchor="0 0 0" solref="0.01 0.5" />
 
         <connect body1="left_follower_link" body2="left_coupler" anchor="0 0 0" solref="0.01 0.5" />
-        <connect body1="left_follower_link" body2="left_spring_link" anchor="0.0054 0.019 0" solref="0.01 0.5" />
+        <connect body1="left_follower_link" body2="left_spring_link" anchor="0.0054 0.0192 0" solref="0.01 0.5" />
         <connect body1="left_driver" body2="left_coupler" anchor="0 0 0" solref="0.01 0.5"/>
 
         <joint name="symmetry:control" joint1="right_driver_1" joint2="left_driver_1" polycoef="0 1 0 0 0"/>
@@ -359,7 +371,7 @@ Control Engineering / Automation Engineering
         <velocity name='wrist_3_v' class="UR5" joint='wrist_3_joint'/>-->
 
         <!--Gripper-->
-        <position name='grippercontrol' ctrllimited="true" kp="10" joint='left_driver_1' ctrlrange='0 0.715' />
+        <position name='grippercontrol' ctrllimited="true" kp="20" joint='left_driver_1' ctrlrange='0 0.65' />
         <!-- <position name="close_r" joint="right_driver_1" ctrllimited="true" ctrlrange="-1 1" kp="3"/> -->
         <!-- <position name="close_l" joint="left_driver_1" ctrllimited="true" ctrlrange="-1 1" kp="3"/> -->
         <!-- <position name='finger_1' ctrllimited="true" kp="20" joint='right_driver_1' ctrlrange='0 1.2217'/>

@@ -59,6 +59,8 @@ class ur3_gripper_box_env(gym.Env):
         self.goal_pos = np.zeros(3)
         self.goal_rot = np.zeros(3)
         self.goal_quat = np.zeros(4)
+        self.right_finger_side = np.zeros(4)
+        self.left_finger_side = np.zeros(4)
         self.goal_quat[0] = 1
         self.reward = -10
         
@@ -114,16 +116,45 @@ class ur3_gripper_box_env(gym.Env):
             print("ee_quat:", self.sim.data.get_body_xquat("eef"))
             if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
                 self.obj_init_pos[-1] -= 0.0815
+                print("grasping object ...")
                 self.reset_flag = False
         if self.get_obj is False and self.reset_flag is False:
             self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
             for i in range(6):
                 self.sim.data.ctrl[i] = self.qpos[i]
             if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
-                self.sim.data.ctrl[6] = 0.5
-        print("touch_sensor ----------------------")
-        for i in range(self.tac_sensor_num):
-            print(self.sim.data.get_sensor(self.tac_sensor_list[i]))
+                self.sim.data.ctrl[6] = 0.4
+            for i in range(4):
+                self.right_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i])
+                self.left_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i+6])
+            if (self.left_finger_side[i]>3).any() and (self.right_finger_side[i]>3).any():
+                self.obj_init_pos[-1] += 0.125
+                print("lift ...")
+                self.get_obj = True
+        if self.move_to_hole is False and self.get_obj is True and self.reset_flag is False:
+            if self.lift_flag is False:
+                self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+                for i in range(6):
+                    self.sim.data.ctrl[i] = self.qpos[i]
+                print(np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos))
+                if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
+                    print("moving to the hole ...")
+                    # for i in range(2):
+                    #     self.obj_init_pos[i] = self.sim.data.get_body_xpos("box")[i]
+                    self.obj_init_pos[0] = self.sim.data.get_body_xpos("box")[0] + 0.08
+                    self.obj_init_pos[1] = self.sim.data.get_body_xpos("box")[1] + 0.08
+                    self.lift_flag = True
+            if self.lift_flag is True:
+                self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+                for i in range(6):
+                    self.sim.data.ctrl[i] = self.qpos[i]
+                if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
+                    print("over grasping and moving")
+                    self.move_to_hole = True
+            
+        # print("touch_sensor ----------------------")
+        # for i in range(self.tac_sensor_num):
+        #     print(self.sim.data.get_sensor(self.tac_sensor_list[i]))
             # self.qpos = joint_limitation(ur3_kdl_func.inverse(obj_init_pos, self.goal_quat), joint_limit_lower, joint_limit_upper)
         #! ------------------ generating new action for env ---------------------------
         #! getting the UR3-joint statement and the obj pos, statement + action[]
@@ -174,6 +205,8 @@ class ur3_gripper_box_env(gym.Env):
     def reset(self):
         self.reset_flag = True
         self.get_obj = False
+        self.move_to_hole = False
+        self.lift_flag = False
         self.done = False
         self.obj_num = random.randint(0, len(self.obj_list))
         self.obj_num = 0 # single object now  (0:box) 
