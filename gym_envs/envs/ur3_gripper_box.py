@@ -31,14 +31,15 @@ initial_pos = [90 / 180 * math.pi, -90 / 180 * math.pi, 90 / 180 * math.pi,
                0, 0, 0, 0, 0, 0, 0, 0] # ur3 + robotiq 2F-85
 joint_limit_lower = [-3.14, -3.14, -3.14, -3.14, -3.14, -3.14]
 joint_limit_upper = [3.14, 3.14, 3.14, 3.14, 3.14, 3.14]
-action_limit_lower = np.array([-0.01, -0.01, -0.01, -0.314, -0.314, -0.314, -0.07])
+action_limit_lower = np.array([-0.01, -0.01, -0.01])
 action_limit_lower = action_limit_lower/10.0
-action_limit_upper = np.array([0.01, 0.01, 0.01, 0.314, 0.314, 0.314, 0.07])
+action_limit_upper = np.array([0.01, 0.01, 0.01])
 action_limit_upper = action_limit_upper/10.0
+# print(action_limit_lower.shape)
 
 fktestpose = [-1.5, -0.3, 0.3, 0.3, 0.3, -0.3] # testing
 obs_dim = 29 # 12 + 6 + 3 + 1 + 7 
-action_dim = 6
+action_dim = 3
 weight_obj_hole_z_axis = 0.7
 weight_touch_tip = 0.65
 z_quat = [0, 1,  0,  0] #  wxyz
@@ -61,8 +62,11 @@ class ur3_gripper_box_env(gym.Env):
         self.goal_quat = np.zeros(4)
         self.right_finger_side = np.zeros(4)
         self.left_finger_side = np.zeros(4)
+        self.eef_pos = np.zeros(3)
+        self.eef_quat = np.zeros(4)
         self.goal_quat[0] = 1
         self.reward = -10
+        self.iter_num = 0
         
         self.joint_list = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
         self.joint_num = len(self.joint_list)
@@ -74,9 +78,9 @@ class ur3_gripper_box_env(gym.Env):
         self.hole_list = ["box"]
         self.hole_num = len(self.hole_list)
         self.obj_list = ["cylinder_obj"]
-        self.action_space = spaces.Box(low=np.float32(action_limit_lower),high=np.float32(action_limit_upper))
-        self.observation_space = spaces.Box(low=-10 * np.float32(np.zeros(obs_dim)),high=10 * np.float32(np.ones(obs_dim)))
-        
+        self.action_space = spaces.Box(-0.010, 0.010, shape=(3,), dtype=np.float64)
+        self.observation_space = spaces.Box(-10, 10, shape=(obs_dim,), dtype=np.float64)
+        # print("---------------------", self.action_space)
         
 
     def seed(self, seed=None):
@@ -87,7 +91,8 @@ class ur3_gripper_box_env(gym.Env):
     def step(self, action):
         # 0.1476259  0.04700822 0.30628886 # target euler
         # 0.170409,    0.167794,    0.538925 # target position
-
+        self.iter_num += 1
+        self.done = False
         # ur3_kdl_func.forward(qpos)
         # goal_rot = [-0.09021003, -0.21542238,  1.55788809]
         # goal_pos = [0.221516,   -0.429323,     1.00631]
@@ -99,58 +104,7 @@ class ur3_gripper_box_env(gym.Env):
         # # self.sim.data.ctrl[1] = remap(action[1], -1, 1, -105 / 180 * math.pi, -50 / 180 * math.pi)
         # # self.sim.data.ctrl[2] = remap(action[2], -1, 1, 0 / 180 * math.pi, 180 / 180 * math.pi)
         #! -------------------- initial pos ------------------
-        if self.reset_flag is True:
-            self.obj_init_pos = copy.deepcopy(self.sim.data.get_body_xpos("cylinder_obj"))
-            self.obj_init_pos[-1] += 0.251
-            # print(self.obj_init_pos)
-            self.obj_init_quat = np.roll(np.array(z_quat), -1)
-            # inv_test_pos = [0.15,      0.38,     1.206475]
-            # inv_test_pos = self.sim.data.get_body_xpos("eef")
-            self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
-            for i in range(6):
-                self.sim.data.ctrl[i] = self.qpos[i]
-            # print("qpos:", self.qpos)
-            # ur3_kdl_func.forward(initial_pos)
-            print("obj_pos:", self.sim.data.get_body_xpos("cylinder_obj"))
-            print("ee_pos:", self.sim.data.get_body_xpos("eef"))
-            print("ee_quat:", self.sim.data.get_body_xquat("eef"))
-            if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
-                self.obj_init_pos[-1] -= 0.0815
-                print("grasping object ...")
-                self.reset_flag = False
-        if self.get_obj is False and self.reset_flag is False:
-            self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
-            for i in range(6):
-                self.sim.data.ctrl[i] = self.qpos[i]
-            if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
-                self.sim.data.ctrl[6] = 0.4
-            for i in range(4):
-                self.right_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i])
-                self.left_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i+6])
-            if (self.left_finger_side[i]>3).any() and (self.right_finger_side[i]>3).any():
-                self.obj_init_pos[-1] += 0.125
-                print("lift ...")
-                self.get_obj = True
-        if self.move_to_hole is False and self.get_obj is True and self.reset_flag is False:
-            if self.lift_flag is False:
-                self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
-                for i in range(6):
-                    self.sim.data.ctrl[i] = self.qpos[i]
-                print(np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos))
-                if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
-                    print("moving to the hole ...")
-                    # for i in range(2):
-                    #     self.obj_init_pos[i] = self.sim.data.get_body_xpos("box")[i]
-                    self.obj_init_pos[0] = self.sim.data.get_body_xpos("box")[0] + 0.08
-                    self.obj_init_pos[1] = self.sim.data.get_body_xpos("box")[1] + 0.08
-                    self.lift_flag = True
-            if self.lift_flag is True:
-                self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
-                for i in range(6):
-                    self.sim.data.ctrl[i] = self.qpos[i]
-                if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
-                    print("over grasping and moving")
-                    self.move_to_hole = True
+        
             
         # print("touch_sensor ----------------------")
         # for i in range(self.tac_sensor_num):
@@ -159,18 +113,19 @@ class ur3_gripper_box_env(gym.Env):
         #! ------------------ generating new action for env ---------------------------
         #! getting the UR3-joint statement and the obj pos, statement + action[]
         # self.eef_quat = self.sim.data.get_body_xquat("eef")
-        # for i in range(3):
-        #     self.goal_pos[i] = self.obs[i+self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3]
+        # print(action)
+        for i in range(3):
+            self.goal_pos[i] = self.sim.data.get_body_xpos("eef")[i]
         # for i in range(4):
         #     self.goal_quat[i] = self.obs[i+3+self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3]
         # self.goal_rot = np.array(R.from_quat([self.goal_quat[1], self.goal_quat[2], self.goal_quat[3], self.goal_quat[0]]).as_euler('zyx', degrees=False))
         # self.gripper_joint = self.obs[self.joint_num+self.tac_sensor_num]
-        # self.get_statement()
+        self.get_statement()
 
         # # TODO: the actions are incremental, so they need to be added into observation above
         # #! actions: delta-eef-pos(3-dim) delta-eef-rot(3-dim) delta-gripper-joint(1-dim)
-        # for i in range(3):
-        #     self.goal_pos[i] += action[i]
+        for i in range(3):
+            self.goal_pos[i] += action[i]
         #     self.goal_rot[i] += action[i+3]
         # self.gripper_joint += action[-1]
         # if self.gripper_joint > 0.7:
@@ -178,10 +133,10 @@ class ur3_gripper_box_env(gym.Env):
         # if self.gripper_joint <= 0:
         #     self.gripper_joint = 0
         # self.goal_quat = np.array(R.from_euler('zyx', [self.goal_rot[0], self.goal_rot[1], self.goal_rot[2]], degrees=False).as_quat())
-        # self.qpos = joint_limitation(ur3_kdl_func.inverse(self.goal_pos, self.goal_quat), joint_limit_lower, joint_limit_upper)
-        # for i in range(6):
-        #     self.sim.data.ctrl[i] = self.qpos[i]
-        
+        self.qpos = joint_limitation(ur3_kdl_func.inverse(self.goal_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+        for i in range(6):
+            self.sim.data.ctrl[i] = self.qpos[i]
+        self.sim.data.ctrl[6] = 0.4
         # print("base_link pos:", self.sim.data.get_body_xpos("base_link"))
         # print("mujoco ee_link pos:", self.sim.data.get_body_xpos("ee_link"))
         # print("gripper end-effector pos:", self.sim.data.get_body_xquat("eef"))
@@ -189,17 +144,23 @@ class ur3_gripper_box_env(gym.Env):
         # for i in range(self.joint_num):
         #     self.obs[i] = self.sim.data.get_joint_qpos(self.joint_list[i])
         # self.sim.data.ctrl[6] = 0.5 # finger-joint controller
-        # time.sleep(0.01)
+        # print("action:", action)
         self.sim.step()
         self.get_observation()
         self.get_reward()
         if self.reward > 60:
             self.done = True
+        if np.linalg.norm(self.sim.data.get_body_xpos("eef") - self.sim.data.get_body_xpos("cylinder_obj")) > 0.03:
+            self.done = True
+
+        print(self.done)
+        print(self.iter_num)
+        
         # print(self.sim.data.get_body_xquat("eef"))
         # print(self.obs)
         # print(self.reward)
-        self.info = {"the processing is going on."}
-        # time.sleep(0.01)
+        self.info = {}
+        # self.viewer.render()
         return self.obs, self.reward, self.done, self.info
 
     def reset(self):
@@ -208,6 +169,7 @@ class ur3_gripper_box_env(gym.Env):
         self.move_to_hole = False
         self.lift_flag = False
         self.done = False
+        self.iter_num = 0
         self.obj_num = random.randint(0, len(self.obj_list))
         self.obj_num = 0 # single object now  (0:box) 
         self.hole_num = random.randint(0, len(self.hole_list))
@@ -218,7 +180,10 @@ class ur3_gripper_box_env(gym.Env):
         
         self.sim.set_state(sim_state)   
         self.sim.forward()
+        self.grasping_moving_init()
         print("reset success")
+        self.get_observation()
+        return self.obs
 
 
     def render(self, open=False):
@@ -268,6 +233,65 @@ class ur3_gripper_box_env(gym.Env):
             self.eef_pos[i] = self.sim.data.get_body_xpos("eef")[i]
         for i in range(4):
             self.eef_quat[i] = self.sim.data.get_body_xquat("eef")[i]
+
+    def grasping_moving_init(self):
+        while self.move_to_hole is False:
+            if self.reset_flag is True:
+                self.obj_init_pos = copy.deepcopy(self.sim.data.get_body_xpos("cylinder_obj"))
+                self.obj_init_pos[-1] += 0.251
+                # print(self.obj_init_pos)
+                self.obj_init_quat = np.roll(np.array(z_quat), -1)
+                # inv_test_pos = [0.15,      0.38,     1.206475]
+                # inv_test_pos = self.sim.data.get_body_xpos("eef")
+                self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+                for i in range(6):
+                    self.sim.data.ctrl[i] = self.qpos[i]
+                # print("qpos:", self.qpos)
+                # ur3_kdl_func.forward(initial_pos)
+                # print("obj_pos:", self.sim.data.get_body_xpos("cylinder_obj"))
+                # print("ee_pos:", self.sim.data.get_body_xpos("eef"))
+                # print("ee_quat:", self.sim.data.get_body_xquat("eef"))
+                if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
+                    self.obj_init_pos[-1] -= 0.0815
+                    print("grasping object ...")
+                    self.reset_flag = False
+            if self.get_obj is False and self.reset_flag is False:
+                self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+                for i in range(6):
+                    self.sim.data.ctrl[i] = self.qpos[i]
+                if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
+                    self.sim.data.ctrl[6] = 0.4
+                for i in range(4):
+                    self.right_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i])
+                    self.left_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i+6])
+                if (self.left_finger_side[i]>3).any() and (self.right_finger_side[i]>3).any():
+                    self.obj_init_pos[-1] += 0.125
+                    print("lift ...")
+                    self.get_obj = True
+            if self.move_to_hole is False and self.get_obj is True and self.reset_flag is False:
+                if self.lift_flag is False:
+                    self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+                    for i in range(6):
+                        self.sim.data.ctrl[i] = self.qpos[i]
+                    # print(np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos))
+                    if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
+                        print("moving to the hole ...")
+                        # for i in range(2):
+                        #     self.obj_init_pos[i] = self.sim.data.get_body_xpos("box")[i]
+                        self.obj_init_pos[0] = self.sim.data.get_body_xpos("box")[0] + 0.08
+                        self.obj_init_pos[1] = self.sim.data.get_body_xpos("box")[1] + 0.08
+                        self.obj_init_pos[-1] += 0.01
+                        self.lift_flag = True
+                if self.lift_flag is True:
+                    self.qpos = joint_limitation(ur3_kdl_func.inverse(self.obj_init_pos, self.obj_init_quat), joint_limit_lower, joint_limit_upper)
+                    for i in range(6):
+                        self.sim.data.ctrl[i] = self.qpos[i]
+                    if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
+                        print("over grasping and moving")
+                        self.move_to_hole = True
+            self.sim.step()
+            # self.viewer.render()
+
 
 
 

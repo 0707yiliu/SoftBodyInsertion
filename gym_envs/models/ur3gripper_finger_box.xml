@@ -132,7 +132,7 @@ Control Engineering / Automation Engineering
         </body>
         
 
-        <body name="box" pos="0 0.3 0.87">
+        <body name="box" pos="0 0.3 0.8">
 		    <body name="collision">
 		
                 <geom name="box_part_1" pos="0 0 -0.03" mesh="1" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="6700" friction="0.95 0.3 0.1" 		    material="metal_box" group="1" condim="4" rgba="0 1 0 1"  />
@@ -349,9 +349,9 @@ Control Engineering / Automation Engineering
 	</equality>
 
     <actuator>
-        <position name='shoulder_pan' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='shoulder_pan_joint' kp="500"/>
-        <position name='shoulder_lift' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='shoulder_lift_joint' kp="500"/>
-        <position name='forearm' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='elbow_joint' kp="500"/>
+        <position name='shoulder_pan' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='shoulder_pan_joint' kp="300"/>
+        <position name='shoulder_lift' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='shoulder_lift_joint' kp="480"/>
+        <position name='forearm' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='elbow_joint' kp="400"/>
         <position name='wrist_1' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_1_joint' kp="300"/>
         <position name='wrist_2' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_2_joint' kp="300"/>
         <position name='wrist_3' ctrllimited="true" ctrlrange="-3.14159 3.14159" joint='wrist_3_joint' kp="300"/>
@@ -371,7 +371,7 @@ Control Engineering / Automation Engineering
         <velocity name='wrist_3_v' class="UR5" joint='wrist_3_joint'/>-->
 
         <!--Gripper-->
-        <position name='grippercontrol' ctrllimited="true" kp="20" joint='left_driver_1' ctrlrange='0 0.65' />
+        <position name='grippercontrol' ctrllimited="true" kp="40" joint='left_driver_1' ctrlrange='0 0.65' />
         <!-- <position name="close_r" joint="right_driver_1" ctrllimited="true" ctrlrange="-1 1" kp="3"/> -->
         <!-- <position name="close_l" joint="left_driver_1" ctrllimited="true" ctrlrange="-1 1" kp="3"/> -->
         <!-- <position name='finger_1' ctrllimited="true" kp="20" joint='right_driver_1' ctrlrange='0 1.2217'/>
