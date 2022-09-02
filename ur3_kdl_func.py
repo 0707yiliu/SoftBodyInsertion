@@ -39,7 +39,7 @@ def forward(qpos):
     print("urdf end-effector position:", pos.p)
     print("urdf end-effector quaternion:",kdl.Rotation(pos.M).GetQuaternion())
     
-def inverse(goal_pose, goal_rot):
+def inverse(init_joint, goal_pose, goal_rot):
     try:
         rot = kdl.Rotation()
         rot = rot.Quaternion(goal_rot[0], goal_rot[1], goal_rot[2], goal_rot[3]) # radium
@@ -64,12 +64,8 @@ def inverse(goal_pose, goal_rot):
     # ik_p_kdl = kdl.ChainIkSolverPos_NR_JL(chain, q_min, q_max, fk, ik_v)
     ik_p_kdl = kdl.ChainIkSolverPos_NR(chain, fk, ik_v, maxiter=100, eps=math.pow(10, -9))
     q_init = kdl.JntArray(chain.getNrOfJoints())
-    q_init[0] = 90 / 180 * math.pi
-    q_init[1] = -90 / 180 * math.pi
-    q_init[2] = 90 / 180 * math.pi
-    q_init[3] = -90 / 180 * math.pi
-    q_init[4] = -90 / 180 * math.pi
-    q_init[5] = 0
+    for i in range(6):
+        q_init[i] = init_joint[i]
     q_out = kdl.JntArray(chain.getNrOfJoints())
     ik_p_kdl.CartToJnt(q_init, target_pos, q_out)
     # print("Output angles:", q_out)
