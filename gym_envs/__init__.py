@@ -9,3 +9,8 @@ register(
     id='ur3-pih-box-v0',
     entry_point='gym_envs.envs:ur3_gripper_box_env',
 )
+
+register(
+    id='ur3-pih-box-v1',
+    entry_point='gym_envs.envs:ur3_gripper_box_env_v1',
+)

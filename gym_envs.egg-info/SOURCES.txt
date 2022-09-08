@@ -9,3 +9,4 @@ gym_envs.egg-info/top_level.txt
 gym_envs/envs/__init__.py
 gym_envs/envs/foo_env.py
 gym_envs/envs/ur3_gripper_box.py
+gym_envs/envs/ur3_gripper_box_v1.py

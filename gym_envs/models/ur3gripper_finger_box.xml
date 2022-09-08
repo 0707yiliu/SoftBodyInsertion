@@ -132,7 +132,7 @@ Control Engineering / Automation Engineering
         </body>
         
 
-        <body name="box" pos="0 0.3 0.8">
+        <body name="box" pos="0 0.3 0.87">
 		    <body name="collision">
 		
                 <geom name="box_part_1" pos="0 0 -0.03" mesh="1" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="6700" friction="0.95 0.3 0.1" 		    material="metal_box" group="1" condim="4" rgba="0 1 0 1"  />

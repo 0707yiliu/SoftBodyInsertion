@@ -21,6 +21,7 @@ import copy
 
 from gym import error, spaces, utils
 from gym.utils import seeding
+from gym.envs.mujoco import mujoco_env
 from scipy.spatial.transform import Rotation as R
 
 import ur3_kdl_func
@@ -46,14 +47,23 @@ z_quat = [0, 1,  0,  0] #  wxyz
 # ------------- hard code --------------------------
 
 
-class ur3_gripper_box_env(gym.Env):
+class ur3_gripper_box_env_v1(mujoco_env.MujocoEnv, utils.EzPickle):
 
-    def __init__(self):
+    def __init__(
+        self,
+        file="gym_envs/models/ur3gripper_finger_box.xml",
+        render=False
+    ):
         # loading model from xml file
-        self.model = load_model_from_path('gym_envs/models/ur3gripper_finger_box.xml')
+        self.model = load_model_from_path(file)
         self.sim = MjSim(self.model)
         self.data = self.sim.data
-        self.viewer = mj.MjViewer(self.sim)
+        if render is True:
+            self.viewer = mj.MjViewer(self.sim)
+            self.is_render = True
+        else:
+            self.is_render = False
+
         self.done = False
         self.obs_joint = np.zeros(6)
         self.obs = np.zeros(obs_dim)
@@ -153,17 +163,20 @@ class ur3_gripper_box_env(gym.Env):
         self.get_reward()
         if self.reward > 60:
             self.done = True
-        if np.linalg.norm(self.sim.data.get_body_xpos("eef") - self.sim.data.get_body_xpos("cylinder_obj")) > 0.03:
+        if np.linalg.norm(self.sim.data.get_body_xpos("eef") - self.sim.data.get_body_xpos("cylinder_obj")) > 0.05:
             self.done = True
+        #! TODO: the finger will press the desk and produce large number, which can not be added into the reward function.
+        # print(self.reward)
 
         # print(self.done)
         # print(self.iter_num)
         
         # print(self.sim.data.get_body_xquat("eef"))
         # print(self.obs)
-        # print(self.reward)
+        print(self.reward)
         self.info = {}
-        # self.viewer.render()
+        if self.render is True:
+            self.viewer.render()
         return self.obs, self.reward, self.done, self.info
 
     def reset(self):
@@ -183,9 +196,9 @@ class ur3_gripper_box_env(gym.Env):
             sim_state.qpos[i] = initial_pos[i]
         self.sim.set_state(sim_state)   
         self.sim.forward()
-        print("grasping.")
+        # print("grasping.")
         self.grasping_moving_init()
-        print("reset success")
+        # print("reset success")
         self.get_observation()
         return self.obs
 
@@ -221,16 +234,20 @@ class ur3_gripper_box_env(gym.Env):
 
     
     def get_reward(self):
+        d_o_h = 1000
+        t_s = 0.25
+        d_o_g = 5000
         self.touch_strength = 0
-        self.dis_obj_hole = -math.sqrt((1 - weight_obj_hole_z_axis) * (self.obs[self.joint_num+self.tac_sensor_num+self.gripper_joint_num] - self.obs[self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3]) ** 2
-                            + (1 - weight_obj_hole_z_axis) * (self.obs[self.joint_num+self.tac_sensor_num+self.gripper_joint_num+1] - self.obs[self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3 + 1]) ** 2
-                            + weight_obj_hole_z_axis * (self.obs[self.joint_num+self.tac_sensor_num+self.gripper_joint_num+2] - self.obs[self.joint_num+self.tac_sensor_num+self.gripper_joint_num+self.hole_num * 3 + 2]) ** 2) 
+        self.dis_obj_hole = -math.sqrt((1 - weight_obj_hole_z_axis) * (self.sim.data.get_body_xpos(self.hole_list[0])[0]+0.08 - self.sim.data.get_body_xpos(self.obj_list[0])[0]) ** 2
+                            + (1 - weight_obj_hole_z_axis) * (self.sim.data.get_body_xpos(self.hole_list[0])[1]+0.08 - self.sim.data.get_body_xpos(self.obj_list[0])[1]) ** 2
+                            + weight_obj_hole_z_axis * (self.sim.data.get_body_xpos(self.obj_list[0])[2] - self.sim.data.get_body_xpos(self.obj_list[0])[2]) ** 2) 
         for i in range(self.tac_sensor_num):
             if i == 4 or i ==5 or i == 10 or i == 11: # the finger tip sensor
                 self.touch_strength += weight_touch_tip * self.obs[i+self.joint_num]
             else:
                 self.touch_strength += (1 - weight_touch_tip) * self.obs[i+self.joint_num]
-        self.reward = self.dis_obj_hole + self.touch_strength
+        self.dis_obj_gripper = -np.linalg.norm(self.sim.data.get_body_xpos("eef") - self.sim.data.get_body_xpos("cylinder_obj"))
+        self.reward = d_o_h * self.dis_obj_hole + t_s * self.touch_strength + d_o_g * self.dis_obj_gripper
     
     def get_statement(self):
         for i in range(3):
@@ -248,7 +265,7 @@ class ur3_gripper_box_env(gym.Env):
                 self.obs_joint[i] = self.sim.data.get_joint_qpos(self.joint_list[i])
             if np.linalg.norm(self.obs_joint - np.array(initial_pos[:6])) < 0.003:
                 self.done = True
-                print("init success")
+                # print("init success")
         self.done = False
         while self.move_to_hole is False:
             
@@ -272,7 +289,7 @@ class ur3_gripper_box_env(gym.Env):
                 # print("ee_quat:", self.sim.data.get_body_xquat("eef"))
                 if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.003:
                     self.obj_init_pos[-1] -= 0.0815
-                    print("grasping object ...")
+                    # print("grasping object ...")
                     self.reset_flag = False
             if self.get_obj is False and self.reset_flag is False:
                 for i in range(6):
@@ -288,7 +305,7 @@ class ur3_gripper_box_env(gym.Env):
                     self.left_finger_side[i] = self.sim.data.get_sensor(self.tac_sensor_list[i+6])
                 if (self.left_finger_side[i]>3).any() and (self.right_finger_side[i]>3).any():
                     self.obj_init_pos[-1] += 0.125
-                    print("lift ...")
+                    # print("lift ...")
                     self.get_obj = True
             if self.move_to_hole is False and self.get_obj is True and self.reset_flag is False:
                 if self.lift_flag is False:
@@ -300,7 +317,7 @@ class ur3_gripper_box_env(gym.Env):
                         self.sim.data.ctrl[i] = self.qpos[i]
                     # print(np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos))
                     if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
-                        print("moving to the hole ...")
+                        # print("moving to the hole ...")
                         # for i in range(2):
                         #     self.obj_init_pos[i] = self.sim.data.get_body_xpos("box")[i]
                         self.obj_init_pos[0] = self.sim.data.get_body_xpos("box")[0] + 0.08
@@ -315,10 +332,11 @@ class ur3_gripper_box_env(gym.Env):
                     for i in range(6):
                         self.sim.data.ctrl[i] = self.qpos[i]
                     if np.linalg.norm(self.sim.data.get_body_xpos("ee_link") - self.obj_init_pos) < 0.004:
-                        print("over grasping and moving")
+                        # print("over grasping and moving")
                         self.move_to_hole = True
             self.sim.step()
-            # self.viewer.render()
+            if self.is_render is True:
+                self.viewer.render()
 
 
 
