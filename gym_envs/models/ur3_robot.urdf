@@ -5,7 +5,7 @@
   <joint name="shoulder_pan_joint" type="revolute">
     <parent link="base_link"/>
     <child link="shoulder_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.003"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.013"/>
     <axis xyz="0 0 1"/>
   </joint>
   <link name="shoulder_link">
@@ -53,7 +53,7 @@
   <joint name="ee_fixed_joint" type="fixed">
     <parent link="ee_link"/>
     <child link="tool0"/>
-    <origin rpy="-1.5707963 0.0 0" xyz="0.0 0.0819 0.0"/>
+    <origin rpy="-1.5707963 0.0 0" xyz="0.0 0.2619 0.0"/>
   </joint>
   <link name="tool0"/>
 </robot>

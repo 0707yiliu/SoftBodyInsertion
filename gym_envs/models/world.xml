@@ -1,0 +1,32 @@
+<!--
+
+MODEL: general world
+AUTHOR: Yi Liu @AiRO 
+UNIVERSITY: UGent-imec
+DEPARTMENT: Faculty of Engineering and Architecture
+Control Engineering / Automation Engineering
+
+-->
+<mujocoimport>
+    <asset>
+        <texture name="grid" builtin="checker" height="500" rgb1=".1 .2 .3" rgb2=".2 .3 .4" type="2d" width="500"/>
+        <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+        <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+        <material name="silver" specular="1" shininess="0.5" reflectance="1" emission="0.25" rgba="0.82 0.82 0.82 1"/>
+        <material name="grey" specular="1" shininess="0.5" reflectance="1" emission="0.1" rgba="0.5 0.5 0.5 1"/>
+        <material name="blue" specular="1" shininess="0.5" reflectance="1" emission="0" rgba="0.678 0.847 0.902 1"/>
+        <material name="black" specular="1" shininess="0.5" reflectance="1" emission="0" rgba="0.2 0.2 0.2 1"/>
+        <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
+        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    </asset>
+    <visual>
+        <rgba haze="0.15 0.25 0.35 1"/>
+        <quality shadowsize="2048"/>
+        <map stiffness="700" shadowscale="0.5" fogstart="10" fogend="15" zfar="40" haze="0.3"/>
+    </visual>
+    <worldbody>
+        <light pos="0 0 1"/>
+        <light pos="0 -0.2 1" dir="0 0.2 -0.8" directional="true"/>
+        <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+    </worldbody>
+</mujocoimport>

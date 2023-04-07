@@ -1,0 +1,38 @@
+<!--
+
+MODEL: curved hole
+AUTHOR: Yi Liu @AiRO 
+UNIVERSITY: UGent-imec
+DEPARTMENT: Faculty of Engineering and Architecture
+Control Engineering / Automation Engineering
+
+-->
+
+<mujoco model="curved hole">
+    <asset>
+        <mesh name="tube1" file="cube_hole_1.stl" />
+        <mesh name="tube2" file="cube_hole_2.stl" />
+        <mesh name="tube3" file="cube_hole_3.stl" />
+        <mesh name="tube4" file="cube_hole_4.stl" />
+        <mesh name="tubebottom" file="cube_hole_bottom.stl" />
+        <mesh name="tubetop" file="cube_hole_top.stl" />
+    </asset>
+
+    <worldbody>
+        <body mocap="true" name="box" pos="0.1 0.4 0.9" quat="0.7071068 0 -0.7071068 0 "> 
+        <!-- <body mocap="true" name="box" pos="0.1 0.4 0.9" quat="0.9659258 0 0.258819 0 ">  -->
+            <body name="object">
+                <geom pos="0 0 0" type="mesh"  mesh="tube1"  rgba="0.6 0.2 0.1 1"/>
+                <geom pos="0 0 0" type="mesh"  mesh="tube2"  rgba="0.6 0.2 0.1 1"/>
+                <geom pos="0 0 0" type="mesh"  mesh="tube3" rgba="0.6 0.2 0.1 1"/>
+                <geom pos="0 0 0" type="mesh"  mesh="tube4" rgba="0.6 0.2 0.1 1"/>
+                <geom pos="0 0 0" type="mesh"  mesh="tubetop"  rgba="0.6 0.2 0.1 1"/>
+                <geom pos="0 0 0" type="mesh"  mesh="tubebottom" rgba="0.6 0.2 0.1 1"/>
+                <!-- <geom name="box_surface1" pos="0.015 -0.005 0" type="sphere" size=".005 .005 .005" /> -->
+                <!-- <site name="hole_top" pos="0.015 -0.005 0" type="sphere" size=".005 .005 .005" />
+                <site name="hole_bottom" pos="-0.015 0.005 0" type="sphere" size=".005 .005 .005" /> -->
+                <!-- <site name="box_surface" pos="0 0 0.05" size="0.001 0.001 0.001" type="sphere" rgba="0.3 0.2 0.1 1"/> -->
+            </body>
+        </body>
+    </worldbody>
+</mujoco>

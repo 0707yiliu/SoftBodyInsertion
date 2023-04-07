@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<robot name="ur3">
+  <link name="base_link">
+  </link>
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="shoulder_link">
+  </link>
+  <joint name="shoulder_lift_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin rpy="0.0 1.570796325 0.0" xyz="0.0 0.1378 0.0"/>
+    <!--origin rpy="0.0 1.570796325 0.0" xyz="0.0 0.1198 0.0"/-->
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="upper_arm_link">
+  </link>
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="wrist_1_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 -0.0925 0.24365"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="wrist_1_link">
+  </link>
+  <joint name="wrist_1_joint" type="revolute">
+    <parent link="wrist_1_link"/>
+    <child link="wrist_2_link"/>
+    <origin rpy="0.0 1.570796325 0.0" xyz="0.0 0.0 0.21325"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="wrist_2_link">
+  </link>
+  <joint name="wrist_2_joint" type="revolute">
+    <parent link="wrist_2_link"/>
+    <child link="wrist_3_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.08505 0.0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="wrist_3_link">
+  </link>
+  <joint name="wrist_3_joint" type="revolute">
+    <parent link="wrist_3_link"/>
+    <child link="ee_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.08535"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="ee_link">
+  </link>
+  <joint name="ee_fixed_joint" type="fixed">
+    <parent link="ee_link"/>
+    <child link="tool0"/>
+    <!--origin rpy="-1.5707963 0.0 0" xyz="0.0 0.0819 0.0"/ -->
+    <origin rpy="-1.5707963 0.0 0" xyz="0.0 0.2539 0.0"/>
+    <!--origin rpy="-1.5707963 0.0 1.570796325" xyz="0.0 0.0819 0.0"/-->
+  </joint>
+  <link name="tool0"/>
+</robot>
+

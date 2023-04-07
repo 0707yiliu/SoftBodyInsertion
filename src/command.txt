@@ -1,0 +1,12 @@
+
+# displaying
+python run.py -m pih_1007172700 -e URPiH-v1 -a TD3 -r
+
+# trainning
+python run.py -m pih_ -e URPiH-v1 -t 6e5 -a TD3 -l 
+
+# the new command
+## rendering
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih-touch-ee-4mm-e2mm_1211094643.pkl -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0008 -hs 2cm -r
+## learning
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih-touch-ee-4mm-e2mm_ -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0001 -hs 4mm -l
