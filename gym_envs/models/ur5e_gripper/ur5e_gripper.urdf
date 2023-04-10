@@ -1,0 +1,67 @@
+<?xml version="1.0" ?>
+<robot name="ur5e">
+  <link name="base_link">
+  </link>
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_link"/>
+<!--    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.163"/>-->
+    <origin rpy="0.0 0.0 0" xyz="0.0 0.0 1.033"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="shoulder_link">
+  </link>
+  <joint name="shoulder_lift_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin rpy="0.0 1.57079632679 0.0" xyz="0.0 0.138 0.0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="upper_arm_link">
+  </link>
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 -0.131 0.425"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="forearm_link">
+  </link>
+  <joint name="wrist_1_joint" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_1_link"/>
+    <origin rpy="0.0 1.57079632679 0.0" xyz="0.0 0.0 0.392"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="wrist_1_link">
+  </link>
+  <joint name="wrist_2_joint" type="revolute">
+    <parent link="wrist_1_link"/>
+    <child link="wrist_2_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.127 0.0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="wrist_2_link">
+  </link>
+  <joint name="wrist_3_joint" type="revolute">
+    <parent link="wrist_2_link"/>
+    <child link="wrist_3_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.1"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="wrist_3_link">
+  </link>
+  <joint name="ee_fixed_joint" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="ee_link"/>
+    <origin rpy="0.0 0.0 1.57079632679" xyz="0.0 0.1 0.0"/>
+  </joint>
+  <link name="ee_link"/>
+  <link name="tool0"/>
+  <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
+<!--    <origin rpy="-1.57079632679 0 0" xyz="0 0.2619 0"/>-->
+    <origin rpy="-1.57079632679 0 -1.57079632679 " xyz="0 0.34 0"/>
+    <parent link="wrist_3_link"/>
+    <child link="tool0"/>
+  </joint>
+</robot>

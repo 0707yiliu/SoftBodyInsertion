@@ -39,7 +39,7 @@ import math
 import gym_envs.envs.robots.robotiq_gripper as robotiq_gripper
 
 # this func defines the action which contains x and y without z, z would be used by force detection.
-class UR3(MujocoRobot):
+class UR(MujocoRobot):
     def __init__(
         self,
         sim,

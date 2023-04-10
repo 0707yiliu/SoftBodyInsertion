@@ -7,7 +7,7 @@
 import numpy as np
 
 from gym_envs.envs.core import RobotTaskEnv
-from gym_envs.envs.robots.ur import UR3
+from gym_envs.envs.robots.ur import UR
 from gym_envs.envs.tasks.pih import PeginHole
 from gym_envs.mujoco_func2 import Mujoco_Func
 # from gym_envs.envs.apriltagDetection import AprilTag
@@ -32,7 +32,7 @@ class URPeginHoleEnv(RobotTaskEnv):
             hole_size=hole_size,
             real_robot=real_robot,
             )
-        robot = UR3(
+        robot = UR(
             sim=sim,
             block_gripper=True, 
             base_position=np.array([-0.6, 0.0, 0.0]), 

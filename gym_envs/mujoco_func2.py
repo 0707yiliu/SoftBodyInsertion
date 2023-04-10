@@ -19,6 +19,7 @@ import mediapy as media
 import mujoco
 import mujoco_viewer
 # import mujoco.viewer as render
+from scipy.spatial.transform import Rotation as R
 
 # import subprocess
 # if subprocess.run('nvidia-smi').returncode:
@@ -78,14 +79,14 @@ class Mujoco_Func:
         real_robot: bool = False,
     ) -> None:
         if real_robot is True:
-            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur3_robot_real.urdf"
+            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
         else:
-            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur3_robot.urdf"
+            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
         self.urxkdl = urkdl.URx_kdl(urDH_file)
         if vision_touch == 'vision':
-            xml_file = 'ur3_pih_curved.xml'
+            xml_file = 'ur5e_gripper/scene.xml'
         elif vision_touch == 'vision-touch' or vision_touch == 'touch':
-            xml_file = 'ur3_pih_curved.xml'
+            xml_file = 'ur5e_gripper/scene.xml'
         file = file_root + xml_file
         self.model = mujoco.MjModel.from_xml_path(file)
         self.data = mujoco.MjData(self.model)
@@ -130,6 +131,9 @@ class Mujoco_Func:
     def get_site_position(self, site: str) -> np.ndarray:
         return self.data.site_xpos[mujoco.mj_name2id(self.model, type=6, name=site)]
 
+    def get_site_mat(self, site: str) -> np.ndarray:
+        return self.data.site_xmat[mujoco.mj_name2id(self.model, type=6, name=site)]
+
     def set_joint_angles(self, joints: np.ndarray, angles: np.ndarray) -> None:
         for i in range(len(angles)):
             self.data.qpos[joints[i]] = angles[i]
@@ -172,10 +176,22 @@ class Mujoco_Func:
 # test_env = Mujoco_Func()
 #
 # i = 0
+# fw_qpos = np.array([0, 0, 0, 0, 0, 0])
+# joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
+#               'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
+# current_arm_joint = np.zeros(6)
 # while i < 5000:
 #     i += 1
 #     test_env.step()
-#     test_env.control_joints([0.1, 0.2, 0.3, 0.4])
+#     test_env.control_joints([0, 0., 0., 0., 0., 0., 0.])
+#     for j in range(6):
+#         current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
+#     r = R.from_matrix(test_env.get_site_mat('obj_bottom').reshape(3, 3))
+#     # r = test_env.get_body_quaternion("wrist_3_link")
+#     # print("sim qua:", r.as_quat())
+#     print("sim tool:", test_env.get_site_position('obj_bottom'))
+#     print("fw:", test_env.forward_kinematics(fw_qpos))
+#     # print(test_env.inverse_kinematics(current_arm_joint, test_env.get_site_position('obj_bottom'), r.as_quat()))
 #     if i > 1000:
 #         test_env.reset()
 #         i = 0
