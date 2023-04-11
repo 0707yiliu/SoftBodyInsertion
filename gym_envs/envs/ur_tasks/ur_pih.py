@@ -7,7 +7,7 @@
 import numpy as np
 
 from gym_envs.envs.core import RobotTaskEnv
-from gym_envs.envs.robots.ur import UR
+from gym_envs.envs.robots.ur5 import UR
 from gym_envs.envs.tasks.pih import PeginHole
 from gym_envs.mujoco_func2 import Mujoco_Func
 # from gym_envs.envs.apriltagDetection import AprilTag

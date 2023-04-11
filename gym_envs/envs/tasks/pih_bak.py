@@ -114,7 +114,67 @@ class PeginHole(Task):
         hole_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0003
         hole_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0003
         
-        return hole_position
+        if self.vision_touch=="touch":
+            return np.array([])
+        elif self.vision_touch == "vision": 
+            if self.real_robot is True:
+                # the ee_site in sim would be moved to ur.py part
+                hole_y_offset = 0
+                hole_x_offset = 0
+                hole_z_offset = 0
+                hole_position = np.array([-self.TransferX + hole_x_offset, 
+                                          -self.TransferY + hole_y_offset, 
+                                          self.TransferZ + hole_z_offset])
+                hole_position[2] += 0.86
+                hole_position = (hole_position - self.goal_mean) * self.norm_scale + self.norm_mean
+                # print("hole pos:",hole_position)
+                return hole_position
+            else:
+                # object_bottom_position = self.sim.get_site_position("obj_bottom")
+                
+                # object_bottom_position = self.sim.get_site_position("ee_site")
+
+                # hole_position = np.copy(self.goal)
+                # if self._normalize_obs is True:
+                #     object_bottom_position = normalizeVector(data=object_bottom_position)
+                #     hole_position = normalizeVector(data=hole_position)
+                # return np.concatenate((object_bottom_position, hole_position))
+                if self._normalize_obs is True:
+                    object_bottom_position = normalizeVector(data=object_bottom_position)
+                    hole_position = normalizeVector(data=hole_position)
+                hole_position = (hole_position - self.goal_mean) * self.norm_scale + self.norm_mean
+                return hole_position
+        elif self.vision_touch == "vision-touch": 
+            if self.real_robot is True:
+                # the ee_site in sim would be moved to ur.py part
+                hole_y_offset = 0
+                hole_x_offset = 0
+                hole_z_offset = 0
+                hole_position = np.array([-self.TransferX + hole_x_offset, 
+                                          -self.TransferY + hole_y_offset, 
+                                          self.TransferZ + hole_z_offset])
+                hole_position[2] += 0.86
+                hole_position = (hole_position - self.goal_mean) * self.norm_scale + self.norm_mean
+                # print("hole pos:",hole_position)
+                return hole_position
+            else:
+                # object_bottom_position = self.sim.get_site_position("obj_bottom")
+                
+                # object_bottom_position = self.sim.get_site_position("ee_site")
+
+                # hole_position = np.copy(self.goal)
+                # if self._normalize_obs is True:
+                #     object_bottom_position = normalizeVector(data=object_bottom_position)
+                #     hole_position = normalizeVector(data=hole_position)
+                # return np.concatenate((object_bottom_position, hole_position))
+                
+                if self._normalize_obs is True:
+                    object_bottom_position = normalizeVector(data=object_bottom_position)
+                    hole_position = normalizeVector(data=hole_position)
+                hole_position = (hole_position - self.goal_mean) * self.norm_scale + self.norm_mean
+                # print("hole pos:",hole_position)
+                return hole_position
+
 
     def get_achieved_goal(self) -> np.ndarray:
         object_position = np.copy(self.sim.get_site_position("obj_bottom"))

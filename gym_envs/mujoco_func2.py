@@ -134,9 +134,9 @@ class Mujoco_Func:
     def get_site_mat(self, site: str) -> np.ndarray:
         return self.data.site_xmat[mujoco.mj_name2id(self.model, type=6, name=site)]
 
-    def set_joint_angles(self, joints: np.ndarray, angles: np.ndarray) -> None:
+    def set_joint_angles(self, angles: np.ndarray) -> None:
         for i in range(len(angles)):
-            self.data.qpos[joints[i]] = angles[i]
+            self.data.qpos[i] = angles[i]
         mujoco.mj_forward(self.model, self.data)
 
     def set_mocap_pos(self, mocap: str, pos: np.ndarray) -> None:
@@ -176,23 +176,27 @@ class Mujoco_Func:
 # test_env = Mujoco_Func()
 #
 # i = 0
-# fw_qpos = np.array([0, 0, 0, 0, 0, 0])
+# fw_qpos = np.array([1.53, -1.53, 1.53, -1.53, -1.53, 0])
 # joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
 #               'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
 # current_arm_joint = np.zeros(6)
+# # test_env.reset()
+# # test_env.set_joint_angles(fw_qpos)
 # while i < 5000:
 #     i += 1
 #     test_env.step()
-#     test_env.control_joints([0, 0., 0., 0., 0., 0., 0.])
+#     test_env.control_joints([0.5, 1.53, 1.53, 1.53, 1.53, 0, 0.])
 #     for j in range(6):
 #         current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
 #     r = R.from_matrix(test_env.get_site_mat('obj_bottom').reshape(3, 3))
 #     # r = test_env.get_body_quaternion("wrist_3_link")
 #     # print("sim qua:", r.as_quat())
-#     print("sim tool:", test_env.get_site_position('obj_bottom'))
-#     print("fw:", test_env.forward_kinematics(fw_qpos))
+#     print("ft data:", test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
+#     # print("sim tool:", test_env.get_site_position('obj_bottom'))
+#     # print("fw:", test_env.forward_kinematics(fw_qpos))
 #     # print(test_env.inverse_kinematics(current_arm_joint, test_env.get_site_position('obj_bottom'), r.as_quat()))
-#     if i > 1000:
+#     if i > 3000:
 #         test_env.reset()
+#         test_env.set_joint_angles(fw_qpos)
 #         i = 0
 

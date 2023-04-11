@@ -81,7 +81,7 @@ class MujocoRobot(ABC):
         self.sim.control_joints(target_angles=target_angles)
     
     def set_joint_angles(self, angles: np.ndarray) -> None:
-        self.sim.set_joint_angles(joints=self.joint_index, angles=angles)
+        self.sim.set_joint_angles(angles=angles)
 
     def inverse_kinematics(self, current_joint: np.ndarray, target_position: np.ndarray, target_orientation: np.ndarray) -> np.ndarray:
         inverse_kinematics = self.sim.inverse_kinematics(
@@ -187,8 +187,8 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         self.robot.reset()
         self.task.reset()
         self.sim.set_forward() # update env statement
-        if self.init_grasping:
-            self.robot._init_grasping()
+        # if self.init_grasping:
+        #     self.robot._init_grasping()
         return self._get_obs()
     
     def _get_obs(self) -> Dict[str, np.ndarray]:
