@@ -33,6 +33,6 @@ for reward_type in ["sparse", "dense"]:
             id="URPiH{}{}-v1".format(control_suffix, reward_suffix),
             entry_point="gym_envs.envs:URPeginHoleEnv",
             kwargs=kwargs,
-            max_episode_steps=320,
+            max_episode_steps=10000,
         )
 

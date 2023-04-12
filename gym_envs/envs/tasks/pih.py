@@ -28,8 +28,12 @@ class PeginHole(Task):
         # goal_range_high=np.array([0.1, 0.38, 0.955]),
         # goal_range_low=np.array([-0.1, 0.31, 0.93]), # for touch
         # goal_range_high=np.array([0.0, 0.35, 0.93]),
-        goal_range_low=np.array([-0.1, 0.29, 0.85]), # for vision or nodsl
-        goal_range_high=np.array([0.0, 0.36, 0.91]),
+        # goal_range_low=np.array([-0.1, 0.29, 0.85]), # for vision or nodsl
+        # goal_range_high=np.array([0.0, 0.36, 0.91]),
+        goal_range_low=np.array([-0.1, 0.4, 0.85]), # for vision or nodsl
+        goal_range_high=np.array([0.1, 0.6, 0.95]),
+        # goal_range_low=np.array([0, 0, 0]),  # for vision or nodsl
+        # goal_range_high=np.array([0, 0, 0]),
         # goal_range_low=np.array([-0.04145, 0.31122, 0.88]), # for testing
         # goal_range_high=np.array([-0.04145, 0.31122, 0.88]),
         vision_touch_list=['vision', 'touch', 'vision-touch'],
@@ -109,16 +113,17 @@ class PeginHole(Task):
         #     return np.concatenate((object_bottom_position, hole_position))
         object_bottom_position = np.copy(self.sim.get_site_position("ee_site"))
         # object_bottom_position[0] = -1 + self.goal_range_high[0] - object_bottom_position[0]
-        hole_position = np.copy(self.goal)
+        hole_position = np.copy(self.sim.get_site_position("hole_top"))
         hole_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0003
         hole_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0003
         hole_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0003
-        
+        # print("sim tool bot:", self.sim.get_site_position('hole_bottom'))
+        # print("sim tool top:", self.sim.get_site_position('hole_top'))
         return hole_position
 
     def get_achieved_goal(self) -> np.ndarray:
         object_position = np.copy(self.sim.get_site_position("obj_bottom"))
-        object_position[2] += 0.01
+        # object_position[2] += 0.01
         # print("obj:", object_position[2])
         # print("goal:", self.goal[2])
         # if self.vision_touch == 'vision' or self.vision_touch == 'vision-touch':
@@ -139,7 +144,7 @@ class PeginHole(Task):
             hole_position = np.array([-self.TransferX + hole_x_offset, 
                                             -self.TransferY + hole_y_offset, 
                                             self.TransferZ + hole_z_offset])
-            hole_position[2] += 0.86
+            hole_position[2] += 0.87
             desired_goal = np.copy(hole_position)
             self.goal = np.copy(desired_goal)
         else:
@@ -151,16 +156,15 @@ class PeginHole(Task):
                 self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.002
             # if self.vision_touch == 'vision' or self.vision_touch == 'vision-touch':
                 # desired_goal[2] -= 0.02
-            desired_goal[2] -= 0.02
+            # desired_goal[2] -= 0.02
             # print("self.goal:", self.goal)
             # print('desired_goal:', desired_goal)
             # # print(hole_position)
-        
 
         self.sim.set_mocap_pos(mocap="box", pos=desired_goal)
         ## randomize the rotation of the hole in z-axis direction
         z_deg = (2.0 * np.random.random() + (-1.0)) * 60
-        desired_quat = euler_to_quaternion(0, 0, z_deg * self.deg2rad)
+        desired_quat = euler_to_quaternion(z_deg * self.deg2rad, -90 * self.deg2rad, 0)
         self.sim.set_mocap_quat(mocap="box", quat=desired_quat)
 
         # z_deg = (2.0 * np.random.random() + (-1.0)) * 60
@@ -200,15 +204,15 @@ class PeginHole(Task):
         # print(d)
         # x_ratio = 2.3
         # y_ratio = 2.3
-        x_ratio = 90
-        y_ratio = 90
+        x_ratio = 1.5
+        y_ratio = 1.5
         d_x = abs(achieved_goal[0] - desired_goal[0]) * x_ratio
         d_y = abs(achieved_goal[1] - desired_goal[1]) * y_ratio
-        d_z = abs(achieved_goal[2] - desired_goal[2]) * 90
+        d_z = abs(achieved_goal[2] - desired_goal[2]) * 1.5
         # print(achieved_goal[2] - desired_goal[2])
-        if d < 0.0001:
+        if d < 0.01:
             d_p = 100
-        elif d < 0.01 and (achieved_goal[2] - desired_goal[2]) < self.z_distance_threshold:
+        elif d < 0.02 and (achieved_goal[2] - desired_goal[2]) < self.z_distance_threshold:
             self.suc_times += 1
             d_p = self.suc_times * 5
         else:

@@ -1,9 +1,5 @@
 <mujoco model="ur5e">
   <compiler angle="radian" meshdir="assets" autolimits="true"/>
-  <option>
-    <flag gravity="disable"
-          warmstart="disable"/>
-  </option>
   <default>
     <joint axis="0 1 0" range="-6.28319 6.28319"/>
     <position ctrlrange="-6.2831 6.2831"/>

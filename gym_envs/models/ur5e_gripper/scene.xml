@@ -2,7 +2,13 @@
 
   <include file="ur5e_with_gripper.xml"/>
   <include file="hole.xml"/>
+<!--  <include file="soft_body.xml"/>-->
 
+  <option>
+    <flag gravity="disable"
+          warmstart="disable"/>
+  </option>
+  <option timestep="0.001" solver="CG" jacobian="sparse" impratio="10" tolerance="1e-10"/>
   <statistic center="0.3 0 0.4" extent="0.8"/>
 
   <visual>

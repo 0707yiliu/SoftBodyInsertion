@@ -52,7 +52,7 @@ class UR(MujocoRobot):
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
         ee_dis_ratio: float = 0.05,
-        ee_rot_ratio: float = 0.01,
+        ee_rot_ratio: float = 0.1,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
         gripper_max_joint: float = 0.67,
@@ -83,7 +83,7 @@ class UR(MujocoRobot):
         self.gripper_max_joint = gripper_max_joint
         self.vision_touch = vision_touch
         self.ee_rot_ratio = ee_rot_ratio
-        self.ee_dis_ratio = ee_dis_ratio / 60 if self.vision_touch == 'vision' or 'vision-touch' else ee_dis_ratio/40
+        self.ee_dis_ratio = ee_dis_ratio / 10 # sim time = 0.001s, so the ee maximum movement is ee_dis_ratio(/m) between 1s.
         self.gripper_action_ratio = gripper_action_ratio/40 if self.vision_touch =='vision' else gripper_action_ratio/20
         self.random_high = 0.045 if self.vision_touch == 'vision' else 0.045
         self.random_low = -0.045 if self.vision_touch == 'vision' else -0.045 # 0.014
@@ -97,8 +97,10 @@ class UR(MujocoRobot):
         # self.random_lim_high = 0.004 if self.vision_touch == 'vision' else 0.004
         # self.random_lim_low = -0.004 if self.vision_touch == 'vision' else -0.004
         self.joint_dis_ratio = joint_dis_ratio
-        self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.2, 0.25, 0.8])
-        self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.05, 0.40, 1.6])
+        self.ee_rot_low = np.array([-180, -56, 12])
+        self.ee_rot_high = np.array([180, -116, 72])
+        self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.25, 0.1, 0.8])
+        self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.25, 1, 1.6])
         self.gripper_joint_low = gripper_joint_low if gripper_joint_low is not None else 0.3
         self.gripper_joint_high = gripper_joint_high if gripper_joint_high is not None else 0.47
         base_position = base_position if base_position is not None else np.zeros(3)
@@ -134,7 +136,8 @@ class UR(MujocoRobot):
         self.d2r = d2r
         self.sensor_num = len(self.sensor_list)
         self.fingers_index = np.array([6])
-        self.neutral_joint_values = np.array((90, -90, 90, -90, -90, 0, 0))*d2r
+        # self.neutral_joint_values = np.array((90, -90, 90, -90, -90, 0, 0))*d2r
+        self.neutral_joint_values = np.array([1.53094203, -1.50108324,  1.75714794, -1.78607852, -1.52985284,  0])
         self.ee_body = "eef"
         self.finger1 = "right_driver_1"
         self.finger2 = "left_driver_1"
@@ -185,12 +188,17 @@ class UR(MujocoRobot):
         current_ee_pos = self.sim.get_site_position('obj_bottom')
         current_ee_rot = R.from_matrix(self.sim.get_site_mat('obj_bottom').reshape(3, 3)).as_euler('xyz', degrees=True)
         target_ee_pos = current_ee_pos + ee_displacement[:xyz]
-        target_ee_quat = R.from_euler('xyz', current_ee_rot + ee_displacement[xyz:], degrees=True).as_quat()
+        target_ee_rot = current_ee_rot + ee_displacement[xyz:]
+        target_ee_rot = np.clip(target_ee_rot, self.ee_rot_low, self.ee_rot_high)
+        # print(current_ee_rot)
+        target_ee_pos = np.clip(target_ee_pos, self.ee_position_low, self.ee_position_high)
+        target_ee_quat = R.from_euler('xyz', target_ee_rot, degrees=True).as_quat()
         target_arm_angles = self.inverse_kinematics(
                 current_joint=current_joint, 
                 target_position=target_ee_pos, 
                 target_orientation=target_ee_quat
             )
+        # print(target_arm_angles)
         return target_arm_angles
     
     def arm_joint_ctrl_to_target_arm_angles(self, arm_joint_ctrl: np.ndarray) -> np.ndarray:
@@ -235,7 +243,7 @@ class UR(MujocoRobot):
         delta_joint = target_joint - current_joint
         planner_steps = int(_time / self.sim.timestep)
         if grasping is True:
-            finger_joint = np.array([0.42])
+            finger_joint = np.array([200])
             target_full_joint = np.concatenate((target_joint, finger_joint))
             self.control_joints(target_full_joint)
             self.sim.step()

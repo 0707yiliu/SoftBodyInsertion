@@ -29,8 +29,8 @@ Control Engineering / Automation Engineering
                 <geom pos="0 0 0" type="mesh"  mesh="tubetop"  rgba="0.6 0.2 0.1 1"/>
                 <geom pos="0 0 0" type="mesh"  mesh="tubebottom" rgba="0.6 0.2 0.1 1"/>
                 <!-- <geom name="box_surface1" pos="0.015 -0.005 0" type="sphere" size=".005 .005 .005" /> -->
-                <!-- <site name="hole_top" pos="0.015 -0.005 0" type="sphere" size=".005 .005 .005" />
-                <site name="hole_bottom" pos="-0.015 0.005 0" type="sphere" size=".005 .005 .005" /> -->
+                <site name="hole_top" pos="0.015 -0.005 0" type="sphere" size=".005 .005 .005" />
+                <site name="hole_bottom" pos="-0.015 0.005 0" type="sphere" size=".005 .005 .005" />
                 <!-- <site name="box_surface" pos="0 0 0.05" size="0.001 0.001 0.001" type="sphere" rgba="0.3 0.2 0.1 1"/> -->
             </body>
         </body>
