@@ -51,7 +51,7 @@ class UR(MujocoRobot):
         ee_positon_high: Optional[np.array] = None,
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
-        ee_dis_ratio: float = 0.05,
+        ee_dis_ratio: float = 0.08,
         ee_rot_ratio: float = 0.1,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
@@ -97,10 +97,10 @@ class UR(MujocoRobot):
         # self.random_lim_high = 0.004 if self.vision_touch == 'vision' else 0.004
         # self.random_lim_low = -0.004 if self.vision_touch == 'vision' else -0.004
         self.joint_dis_ratio = joint_dis_ratio
-        self.ee_rot_low = np.array([-180, -56, 12])
-        self.ee_rot_high = np.array([180, -116, 72])
-        self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.25, 0.1, 0.8])
-        self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.25, 1, 1.6])
+        self.ee_rot_low = np.array([-180, -116, 12])
+        self.ee_rot_high = np.array([180, -56, 72])
+        self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.25, 0.1, 0.825])
+        self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.25, 1, 1.3])
         self.gripper_joint_low = gripper_joint_low if gripper_joint_low is not None else 0.3
         self.gripper_joint_high = gripper_joint_high if gripper_joint_high is not None else 0.47
         base_position = base_position if base_position is not None else np.zeros(3)
@@ -137,7 +137,8 @@ class UR(MujocoRobot):
         self.sensor_num = len(self.sensor_list)
         self.fingers_index = np.array([6])
         # self.neutral_joint_values = np.array((90, -90, 90, -90, -90, 0, 0))*d2r
-        self.neutral_joint_values = np.array([1.53094203, -1.50108324,  1.75714794, -1.78607852, -1.52985284,  0])
+        # self.neutral_joint_values = np.array([1.53094203, -1.50108324,  1.75714794, -1.78607852, -1.52985284,  0])
+        self.neutral_joint_values = np.array([1.19274333, -1.24175816, 1.74942402, -2.02642832, -1.54568981, 0])
         self.ee_body = "eef"
         self.finger1 = "right_driver_1"
         self.finger2 = "left_driver_1"

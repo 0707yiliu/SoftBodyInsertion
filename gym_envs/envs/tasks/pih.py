@@ -30,8 +30,8 @@ class PeginHole(Task):
         # goal_range_high=np.array([0.0, 0.35, 0.93]),
         # goal_range_low=np.array([-0.1, 0.29, 0.85]), # for vision or nodsl
         # goal_range_high=np.array([0.0, 0.36, 0.91]),
-        goal_range_low=np.array([-0.1, 0.4, 0.85]), # for vision or nodsl
-        goal_range_high=np.array([0.1, 0.6, 0.95]),
+        goal_range_low=np.array([0.05, 0.55, 0.85]), # for vision or nodsl
+        goal_range_high=np.array([0.1, 0.6, 0.85]),
         # goal_range_low=np.array([0, 0, 0]),  # for vision or nodsl
         # goal_range_high=np.array([0, 0, 0]),
         # goal_range_low=np.array([-0.04145, 0.31122, 0.88]), # for testing
@@ -209,7 +209,7 @@ class PeginHole(Task):
         d_x = abs(achieved_goal[0] - desired_goal[0]) * x_ratio
         d_y = abs(achieved_goal[1] - desired_goal[1]) * y_ratio
         d_z = abs(achieved_goal[2] - desired_goal[2]) * 1.5
-        # print(achieved_goal[2] - desired_goal[2])
+        # print(achieved_goal - desired_goal)
         if d < 0.01:
             d_p = 100
         elif d < 0.02 and (achieved_goal[2] - desired_goal[2]) < self.z_distance_threshold:

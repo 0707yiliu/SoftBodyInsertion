@@ -177,7 +177,7 @@ class Mujoco_Func:
 #
 # i = 0
 # # fw_qpos = np.array([1.53, -1.53, 1.53, -1.53, -1.53, 0])
-# fw_qpos = np.array([1.53094203, -1.50108324,  1.75714794, -1.78607852, -1.52985284, 1])
+# fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -2.02642832, -1.54568981, 0])
 # joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
 #               'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
 # current_arm_joint = np.zeros(6)
@@ -186,7 +186,7 @@ class Mujoco_Func:
 # while i < 5000:
 #     i += 1
 #     test_env.step()
-#     test_env.control_joints([1.53094203, -1.50108324,  1.75714794, -1.78607852, -1.52985284, 1, 0.])
+#     test_env.control_joints([1.19274333, -1.24175816,  1.74942402, -2.02642832, -1.54568981, 0, 0.])
 #     for j in range(6):
 #         current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
 #     r = R.from_matrix(test_env.get_site_mat('obj_bottom').reshape(3, 3))
@@ -198,6 +198,7 @@ class Mujoco_Func:
 #     current_ee_rot = R.from_matrix(test_env.get_site_mat('obj_bottom').reshape(3, 3)).as_euler('xyz', degrees=True)
 #     print(current_ee_rot)
 #     # print(test_env.inverse_kinematics(current_arm_joint, test_env.get_site_position('obj_bottom')+[0, 0, 0.1], r.as_quat()))
+#     # print(test_env.inverse_kinematics(current_arm_joint, [0.075, 0.575, 0.9], r.as_quat()))
 #     if i > 3000:
 #         test_env.reset()
 #         test_env.set_joint_angles(fw_qpos)

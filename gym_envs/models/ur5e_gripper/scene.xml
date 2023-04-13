@@ -2,7 +2,7 @@
 
   <include file="ur5e_with_gripper.xml"/>
   <include file="hole.xml"/>
-<!--  <include file="soft_body.xml"/>-->
+  <include file="soft_body.xml"/>
 
   <option>
     <flag gravity="disable"

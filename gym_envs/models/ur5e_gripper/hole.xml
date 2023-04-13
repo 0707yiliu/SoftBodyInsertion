@@ -19,7 +19,7 @@ Control Engineering / Automation Engineering
     </asset>
 
     <worldbody>
-        <body mocap="true" name="box" pos="0.3 0.4 0.9" quat="0.7071068 0 -0.7071068 0 ">
+        <body mocap="true" name="box" pos="0.075 0.575 0.85" quat="0.7071068 0 -0.7071068 0 ">
         <!-- <body mocap="true" name="box" pos="0.1 0.4 0.9" quat="0.9659258 0 0.258819 0 ">  -->
             <body name="object">
                 <geom pos="0 0 0" type="mesh"  mesh="tube1"  rgba="0.6 0.2 0.1 1"/>
