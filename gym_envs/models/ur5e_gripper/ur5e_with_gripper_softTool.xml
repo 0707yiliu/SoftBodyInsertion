@@ -260,9 +260,21 @@
                                   </body>
                               </body>
                           </body>
-                          <body name="cylinder_obj" pos="0 0 0.18" quat="0.7071068 0 0.7071068 0">
-                              <geom name="cylinder22" type="mesh" pos="0 0 0" mesh="tubetool"/>
-                              <site name="obj_bottom" pos="-0.06 0 0" type="sphere" size=".001 .001 .001" />
+                          <body name="cylinder_obj" pos="0 0 0.18" >
+                              <!-- <geom name="cylinder22" type="mesh" pos="0 0 0" mesh="tubetool"/> -->
+                                <geom name="cylinder0" friction="0.5" type="box" size=".005 .005 .005"  euler="0 0 0" rgba="1 0.5 0.5 1"/>
+                                <!-- <inertial mass="0.035" pos="0 0 0"/> -->
+                                <body name="cylinder_obj1" pos="0 0 0.01" >
+                                    <geom name="cylinder1" friction="0.5" type="box" size=".005 .005 .005"  euler="0 0 0" rgba="0 0.5 0.5 1"/>
+                                    <joint name="tool1" type="ball" range="0 6.28319" stiffness="1" damping="5"/>
+                                    <!-- <inertial mass="0.035" pos="0 0 0"/> -->
+                                
+                                    <body name="cylinder_obj2" pos="0 0 0.01" >
+                                        <geom name="cylinder2" friction="0.5" type="box" size=".005 .005 .005"  euler="0 0 0" rgba="0 0.5 0.5 1"/>
+                                        <joint name="tool2" type="ball" range="0 6.28319" stiffness="1" damping="5"/>
+                                        <!-- <inertial mass="0.035" pos="0 0 0"/> -->
+                                    </body>
+                                </body>
                           </body>
                       </body>
                     </body>
