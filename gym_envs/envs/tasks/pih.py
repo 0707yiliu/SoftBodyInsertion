@@ -123,6 +123,7 @@ class PeginHole(Task):
 
     def get_achieved_goal(self) -> np.ndarray:
         object_position = np.copy(self.sim.get_site_position("obj_bottom"))
+        # print(object_position)
         # object_position[2] += 0.01
         # print("obj:", object_position[2])
         # print("goal:", self.goal[2])
@@ -199,7 +200,9 @@ class PeginHole(Task):
             return np.array(d < self.distance_threshold, dtype=np.float64)
     
     def compute_reward(self, achieved_goal, desired_goal, info: Dict[str, Any]) -> Union[np.ndarray, float]:
-        d = distance(achieved_goal, desired_goal)
+        target_bottom = np.copy(self.sim.get_site_position("hole_bottom"))
+        d_bottom = distance(achieved_goal, target_bottom)
+        d_center = distance(achieved_goal, desired_goal)
         # print(achieved_goal[2] - desired_goal[2])
         # print(d)
         # x_ratio = 2.3
@@ -210,16 +213,18 @@ class PeginHole(Task):
         d_y = abs(achieved_goal[1] - desired_goal[1]) * y_ratio
         d_z = abs(achieved_goal[2] - desired_goal[2]) * 1.5
         # print(achieved_goal - desired_goal)
-        if d < 0.01:
-            d_p = 100
-        elif d < 0.02 and (achieved_goal[2] - desired_goal[2]) < self.z_distance_threshold:
+        d_p = 0
+        if d_center < 0.01:
+            d_p = 1
+        if d_bottom < 0.005:
+            d_p += 1
+        elif d_center < 0.01 and (achieved_goal[2] - target_bottom[2]) < self.z_distance_threshold:
             self.suc_times += 1
-            d_p = self.suc_times * 5
+            d_p += self.suc_times * 5
         else:
             self.suc_times = 0
-            d_p = 0
         if self.reward_type == "sparse":
-            return -np.array(d > self.distance_threshold, dtype=np.float64)
+            return -np.array(d_bottom > self.distance_threshold, dtype=np.float64)
         else:
             # if np.array(d < self.distance_threshold, dtype=np.float64).any():
             #     d = -d

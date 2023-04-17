@@ -335,7 +335,8 @@
                                                                                         <body name="cylinder_obj15" pos="0 0 0.005" >
                                                                                             <geom class="collision_tool"/>
                                                                                             <geom class="visual_tool" rgba="0 0.5 0.5 1"/>
-                                                                                            <joint class="tool_ball_joint"/>
+<!--                                                                                            <joint class="tool_ball_joint"/>-->
+                                                                                            <site name="obj_bottom" type="sphere" size=".001 .001 .001" pos="0 0 0" quat="1 0 0 0"/>
                                                                                         </body>
                                                                                     </body>
                                                                                 </body>

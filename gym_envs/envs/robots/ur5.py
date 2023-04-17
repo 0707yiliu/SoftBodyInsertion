@@ -51,7 +51,7 @@ class UR(MujocoRobot):
         ee_positon_high: Optional[np.array] = None,
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
-        ee_dis_ratio: float = 0.08,
+        ee_dis_ratio: float = 0.03,
         ee_rot_ratio: float = 0.1,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
