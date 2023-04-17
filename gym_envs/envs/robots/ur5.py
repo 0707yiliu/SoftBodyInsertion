@@ -186,8 +186,8 @@ class UR(MujocoRobot):
         # print(ee_displacement)
         # target_ee_position = np.clip(ee_displacement[:xyz], self.ee_position_low, self.ee_position_high)
         current_joint = np.array([self.get_joint_angle(joint=self.joint_list[i]) for i in range(6)])
-        current_ee_pos = self.sim.get_site_position('obj_bottom')
-        current_ee_rot = R.from_matrix(self.sim.get_site_mat('obj_bottom').reshape(3, 3)).as_euler('xyz', degrees=True)
+        current_ee_pos = self.sim.get_site_position('attachment_site')
+        current_ee_rot = R.from_matrix(self.sim.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=True)
         target_ee_pos = current_ee_pos + ee_displacement[:xyz]
         target_ee_rot = current_ee_rot + ee_displacement[xyz:]
         target_ee_rot = np.clip(target_ee_rot, self.ee_rot_low, self.ee_rot_high)
