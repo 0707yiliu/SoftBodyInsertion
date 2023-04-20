@@ -139,7 +139,7 @@ for i in range(1):
                 learning_rate=_learning_rate,
                 tensorboard_log=log_dir)
             model.learn(total_timesteps=args.total_timesteps, callback=callback)
-            model.save(root_dir_model + args.model_dir + running_time + ".pkl")
+            # model.save(root_dir_model + args.model_dir + running_time + ".pkl")
             print("the model has saved:", root_dir_model + args.model_dir + running_time + ".pkl")
         elif args.alg == 'PPO':
             print("using PPO algorithm.")
@@ -165,7 +165,7 @@ for i in range(1):
             #     tensorboard_log=log_dir)
             print("set up PPO model env")
             model.learn(total_timesteps=args.total_timesteps, callback=callback)
-            model.save(root_dir_model + args.model_dir + running_time + ".pkl")
+            # model.save(root_dir_model + args.model_dir + running_time + ".pkl")
             print("the model has saved:", root_dir_model + args.model_dir + running_time + ".pkl")
         elif args.alg == 'SAC':
             print("using SAC algorithm.")
@@ -178,7 +178,7 @@ for i in range(1):
                 learning_rate=_learning_rate,
                 tensorboard_log=log_dir)
             model.learn(total_timesteps=args.total_timesteps, callback=callback)
-            model.save(root_dir_model + args.model_dir + running_time + ".pkl")
+            # model.save(root_dir_model + args.model_dir + running_time + ".pkl")
             print("the model has saved:", root_dir_model + args.model_dir + running_time + ".pkl")
 
             # print("mdoel learning error, choose the right model algorithm.")
@@ -217,10 +217,10 @@ for i in range(1):
                 obs = env.reset()
         # plt.subplot(1, 2, 1)
         # plt.show()
-                if args.d_s_l is False:
-                    np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_nodsl_"+ str(i) +'.npy', obs_record)
-                else:
-                    np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_"+ str(i) +'.npy', obs_record)
+        #         if args.d_s_l is False:
+        #             np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_nodsl_"+ str(i) +'.npy', obs_record)
+        #         else:
+        #             np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_"+ str(i) +'.npy', obs_record)
     
     elif args.realrobot is True:
         env = gym.make(
@@ -250,10 +250,10 @@ for i in range(1):
             obs_record = np.r_[obs_record, [obs]]
             i += 1
             # print(i)
-            if args.d_s_l is False:
-                np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + '_real_nodsl.npy', obs_record)
-            else:
-                np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + '_real.npy', obs_record)
+            # if args.d_s_l is False:
+            #     np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + '_real_nodsl.npy', obs_record)
+            # else:
+            #     np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + '_real.npy', obs_record)
 
             # if done:
             #     i += 1
