@@ -113,13 +113,19 @@ class PeginHole(Task):
         #     return np.concatenate((object_bottom_position, hole_position))
         object_bottom_position = np.copy(self.sim.get_site_position("ee_site"))
         # object_bottom_position[0] = -1 + self.goal_range_high[0] - object_bottom_position[0]
-        hole_position = np.copy(self.sim.get_site_position("hole_top"))
-        hole_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0003
-        hole_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0003
-        hole_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0003
+        hole_top_position = np.copy(self.sim.get_site_position("hole_top"))
+        hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0003
+        hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0003
+        hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0003
+
+        hole_bot_position = np.copy(self.sim.get_site_position("hole_bottom"))
+        hole_bot_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0003
+        hole_bot_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0003
+        hole_bot_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0003
         # print("sim tool bot:", self.sim.get_site_position('hole_bottom'))
         # print("sim tool top:", self.sim.get_site_position('hole_top'))
-        return hole_position
+        obs = np.concatenate((hole_top_position, hole_bot_position))
+        return obs
 
     def get_achieved_goal(self) -> np.ndarray:
         object_position = np.copy(self.sim.get_site_position("obj_bottom"))

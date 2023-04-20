@@ -176,8 +176,8 @@ class Mujoco_Func:
 # test_env = Mujoco_Func()
 #
 # i = 0
-# # fw_qpos = np.array([1.53, -1.53, 1.53, -1.53, -1.53, 0])
-# fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -2.02642832, -1.54568981, 0])
+# # fw_qpos = np.array([1.53, -1.53, 1.53, -1.53, -1.53, -1.57079633])
+# fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0])
 # joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
 #               'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
 # current_arm_joint = np.zeros(6)
@@ -186,20 +186,20 @@ class Mujoco_Func:
 # while i < 5000:
 #     i += 1
 #     test_env.step()
-#     test_env.control_joints([1.19274333, -1.24175816,  1.74942402, -2.02642832, -1.54568981, 0, 0.])
+#     test_env.control_joints([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0.])
 #     for j in range(6):
 #         current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
-#     r = R.from_matrix(test_env.get_site_mat('obj_bottom').reshape(3, 3))
+#     r = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3))
 #     # r = test_env.get_body_quaternion("wrist_3_link")
-#     site_pos = test_env.get_site_position("obj_bottom")
+#     site_pos = test_env.get_site_position("attachment_site")
 #     print("site pos:", site_pos)
 #     print("sim qua:", r.as_quat())
 #     # print("ft data:", test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
 #     # print("sim tool:", test_env.get_site_position('obj_bottom'))
 #     print("fw:", test_env.forward_kinematics(fw_qpos))
-#     current_ee_rot = R.from_matrix(test_env.get_site_mat('obj_bottom').reshape(3, 3)).as_euler('xyz', degrees=True)
-#     # print(current_ee_rot)
-#     # print(test_env.inverse_kinematics(current_arm_joint, test_env.get_site_position('obj_bottom')+[0, 0, 0.1], r.as_quat()))
+#     current_ee_rot = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=True)
+#     print(current_ee_rot)
+#     print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, test_env.get_site_position('attachment_site'), r.as_quat()))
 #     # print(test_env.inverse_kinematics(current_arm_joint, [0.075, 0.575, 0.9], r.as_quat()))
 #     if i > 3000:
 #         test_env.reset()

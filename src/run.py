@@ -86,14 +86,14 @@ for i in range(1):
                 eval_env,
                 best_model_save_path=root_dir_model+args.model_dir+running_time+'/',
                 log_path=root_dir_tensorboard+args.model_dir+running_time+'/',
-                eval_freq=10000,
+                eval_freq=100000,
                 deterministic=True,
                 render=False,
             )
             print('saveing best model in training.')
         if args.save_model is True:
             checkpoint_callback = CheckpointCallback(
-                save_freq=50000,
+                save_freq=200000,
                 save_path=root_dir_model+args.model_dir+running_time+'/',
                 name_prefix=args.model_dir+running_time,
                 save_replay_buffer=True,
@@ -133,7 +133,7 @@ for i in range(1):
             model = TD3(
                 policy="MultiInputPolicy", 
                 env=env, 
-                buffer_size=100000, 
+                buffer_size=500000,
                 replay_buffer_class=HerReplayBuffer, 
                 verbose=1, 
                 learning_rate=_learning_rate,
@@ -149,7 +149,9 @@ for i in range(1):
                 verbose=1,
                 ent_coef=0.01,
                 clip_range=_clip_range,
-                learning_rate=_learning_rate, 
+                learning_rate=_learning_rate,
+                n_steps=10240,
+                batch_size=256,
                 tensorboard_log=log_dir)
             # model = RecurrentPPO(
             #     policy="MlpLstmPolicy", 

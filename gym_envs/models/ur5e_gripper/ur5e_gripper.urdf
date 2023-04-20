@@ -60,7 +60,8 @@
   <link name="tool0"/>
   <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
 <!--    <origin rpy="-1.57079632679 0 0" xyz="0 0.2619 0"/>-->
-    <origin rpy="-1.57079632679 0 -1.57079632679 " xyz="0 0.1 0"/>
+<!--    <origin rpy="-1.57079632679 0 -1.57079632679 " xyz="0 0.1 0"/>-->
+    <origin rpy="1.57079632679 0 0" xyz="0 0.1 0"/>
     <parent link="wrist_3_link"/>
     <child link="tool0"/>
   </joint>

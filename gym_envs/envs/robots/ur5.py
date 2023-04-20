@@ -51,7 +51,7 @@ class UR(MujocoRobot):
         ee_positon_high: Optional[np.array] = None,
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
-        ee_dis_ratio: float = 0.03,
+        ee_dis_ratio: float = 0.1,
         ee_rot_ratio: float = 0.1,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
@@ -97,8 +97,8 @@ class UR(MujocoRobot):
         # self.random_lim_high = 0.004 if self.vision_touch == 'vision' else 0.004
         # self.random_lim_low = -0.004 if self.vision_touch == 'vision' else -0.004
         self.joint_dis_ratio = joint_dis_ratio
-        self.ee_rot_low = np.array([-180, -116, 12])
-        self.ee_rot_high = np.array([180, -56, 72])
+        self.ee_rot_low = np.array([-10, -10, -180])
+        self.ee_rot_high = np.array([10, 10, 180])
         self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.25, 0.1, 0.825])
         self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.25, 1, 1.3])
         self.gripper_joint_low = gripper_joint_low if gripper_joint_low is not None else 0.3
@@ -215,8 +215,8 @@ class UR(MujocoRobot):
 
     def get_obs(self) -> np.ndarray:
         # ee_position = np.copy(self.get_ee_position())
-        ee_position = self.sim.get_body_position('base_mount')
-        ee_rot = R.from_quat(np.roll(self.sim.get_body_quaternion('base_mount'), -1)).as_euler('xyz')
+        ee_position = self.sim.get_site_position('attachment_site')
+        ee_rot = R.from_matrix(self.sim.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=False)
         # ee_position = (ee_position - self.ee_mean) * self.norm_scale + self.norm_mean
         # print("sim-ee-position:", ee_position)
         # ee_velocity = np.array(self.get_ee_velocity())
