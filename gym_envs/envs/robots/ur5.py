@@ -51,8 +51,8 @@ class UR(MujocoRobot):
         ee_positon_high: Optional[np.array] = None,
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
-        ee_dis_ratio: float = 0.1,
-        ee_rot_ratio: float = 0.1,
+        ee_dis_ratio: float = 0.25,
+        ee_rot_ratio: float = 0.001,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
         gripper_max_joint: float = 0.67,
@@ -175,7 +175,7 @@ class UR(MujocoRobot):
         current_joint_gripper = np.array(self.get_fingers_width()/2)
         # current_joint_gripper = np.clip(current_joint_gripper, self.gripper_joint_low, self.gripper_joint_high)
         current_joint = np.concatenate((current_joint_arm, [current_joint_gripper]))
-        self.joint_planner(grasping=True, _time=self.planner_time/50, 
+        self.joint_planner(grasping=False, _time=self.planner_time/50, 
                             current_joint=current_joint_arm,
                             target_joint=target_arm_angles)
        
@@ -224,7 +224,11 @@ class UR(MujocoRobot):
         # print(joint_angles)
         # joint_vels = np.array([self.sim.get_joint_velocity(joint=self.joint_list[i]) for i in range(6)])
         ft_sensor = self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor")
-        obs = np.concatenate((ee_position, ee_rot))
+        # print(ft_sensor)
+        if self.vision_touch == "vision":
+            obs = np.concatenate((ee_position, ee_rot))
+        elif self.vision_touch == "vision-touch":
+            obs = np.concatenate((ee_position, ee_rot, ft_sensor))
         return obs
 
     def reset(self) -> None:

@@ -150,7 +150,7 @@ for i in range(1):
                 ent_coef=0.01,
                 clip_range=_clip_range,
                 learning_rate=_learning_rate,
-                n_steps=10240,
+                n_steps=4096,
                 batch_size=256,
                 tensorboard_log=log_dir)
             # model = RecurrentPPO(

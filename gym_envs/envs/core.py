@@ -170,7 +170,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         # print("observation shape:", observation_shape)
         # print(self.obs_record)
         # print(observation_shape)
-        self.observation_space  = spaces.Box(-10.0, 10.0, shape=observation_shape, dtype=np.float32)
+        self.observation_space  = spaces.Box(-10, 10.0, shape=observation_shape, dtype=np.float32)
         print("obs space:",self.observation_space)
         self.action_space = self.robot.action_space
 

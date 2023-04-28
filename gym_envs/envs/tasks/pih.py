@@ -6,6 +6,8 @@
 from ctypes.wintypes import PINT
 from typing import Any, Dict, Union
 
+import math
+
 import numpy as np
 
 from gym_envs.envs.core import Task
@@ -31,7 +33,7 @@ class PeginHole(Task):
         # goal_range_low=np.array([-0.1, 0.29, 0.85]), # for vision or nodsl
         # goal_range_high=np.array([0.0, 0.36, 0.91]),
         goal_range_low=np.array([0.05, 0.55, 0.85]), # for vision or nodsl
-        goal_range_high=np.array([0.1, 0.6, 0.85]),
+        goal_range_high=np.array([0.1, 0.6, 0.89]),
         # goal_range_low=np.array([0, 0, 0]),  # for vision or nodsl
         # goal_range_high=np.array([0, 0, 0]),
         # goal_range_low=np.array([-0.04145, 0.31122, 0.88]), # for testing
@@ -125,6 +127,7 @@ class PeginHole(Task):
         # print("sim tool bot:", self.sim.get_site_position('hole_bottom'))
         # print("sim tool top:", self.sim.get_site_position('hole_top'))
         obs = np.concatenate((hole_top_position, hole_bot_position))
+        # print("hole top pos:", obs[:3])
         return obs
 
     def get_achieved_goal(self) -> np.ndarray:
@@ -140,6 +143,7 @@ class PeginHole(Task):
         #     object_position = self.sim.get_body_position('cylinder_obj')
         #     object_position[2] -= 0.02
         # object_position = self.sim.get_body_position('cylinder_obj')
+        # print("obj pos:",object_position)
         return object_position
     
     def reset(self) -> None:
@@ -159,8 +163,8 @@ class PeginHole(Task):
             # self.goal = np.array([0.0, 0.36, 0.91])
             desired_goal = np.copy(self.goal)
             if self.vision_touch == 'vision' or 'vision-touch': 
-                self.goal[0] += (2.0 * np.random.random() + (-1.0)) * 0.002
-                self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.002
+                self.goal[0] += (2.0 * np.random.random() + (-1.0)) * 0.001
+                self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.001
             # if self.vision_touch == 'vision' or self.vision_touch == 'vision-touch':
                 # desired_goal[2] -= 0.02
             # desired_goal[2] -= 0.02
@@ -170,7 +174,7 @@ class PeginHole(Task):
 
         self.sim.set_mocap_pos(mocap="box", pos=desired_goal)
         ## randomize the rotation of the hole in z-axis direction
-        z_deg = (2.0 * np.random.random() + (-1.0)) * 60
+        z_deg = (2.0 * np.random.random() + (-1.0)) * 20
         desired_quat = euler_to_quaternion(z_deg * self.deg2rad, -90 * self.deg2rad, 0)
         self.sim.set_mocap_quat(mocap="box", quat=desired_quat)
 
@@ -188,58 +192,82 @@ class PeginHole(Task):
         #TODO: transform the achieved and desired goal position to object surface.
         # if self.vision_touch == 'vision' or self.vision_touch == 'vision-touch':
         #     desired_goal[2] += 0.02 # surface
-        d = distance(achieved_goal, desired_goal)
-        d_x = abs(achieved_goal[0] - desired_goal[0])
-        d_y = abs(achieved_goal[1] - desired_goal[1])
-        d_xy = d_x + d_y
-        # print(self.goal)
-        # print(d_xy)
-        if d_xy < 0.01:
-            z_d = achieved_goal[2] - desired_goal[2]
-            # print("z:", z_d, achieved_goal[2], desired_goal[2])
-            return np.array(z_d < self.z_distance_threshold, dtype=np.float64)
-        # print(self.goal, self.sim.get_site_position('box_surface'))
-        
-        else:
-        
-        # print(d)
-            return np.array(d < self.distance_threshold, dtype=np.float64)
+
+        target_bottom = np.copy(self.sim.get_site_position("hole_bottom"))
+        target_top = np.copy(self.sim.get_site_position("hole_top"))
+        d_bottom = distance(achieved_goal, target_bottom)
+        d_center = distance(achieved_goal, desired_goal)
+        d_top = distance(achieved_goal, target_top)
+
+        r_top = 1 - math.tanh(10 * d_top)
+        r_center = 1 - math.tanh(10 * d_center)
+        r_bot = 1 - math.tanh(10 * d_bottom)
+
+        d = r_bot
+
+        return np.array(d > 0.88, dtype=np.float64)
+
+        # d = distance(achieved_goal, desired_goal)
+        # d_x = abs(achieved_goal[0] - desired_goal[0])
+        # d_y = abs(achieved_goal[1] - desired_goal[1])
+        # d_xy = d_x + d_y
+        # # print(self.goal)
+        # # print(d_xy)
+        # if d_xy < 0.01:
+        #     z_d = achieved_goal[2] - desired_goal[2]
+        #     # print("z:", z_d, achieved_goal[2], desired_goal[2])
+        #     return np.array(z_d < self.z_distance_threshold, dtype=np.float64)
+        # # print(self.goal, self.sim.get_site_position('box_surface'))
+        #
+        # else:
+        #
+        # # print(d)
+        #     return np.array(d < self.distance_threshold, dtype=np.float64)
     
     def compute_reward(self, achieved_goal, desired_goal, info: Dict[str, Any]) -> Union[np.ndarray, float]:
         target_bottom = np.copy(self.sim.get_site_position("hole_bottom"))
+        target_top = np.copy(self.sim.get_site_position("hole_top"))
         d_bottom = distance(achieved_goal, target_bottom)
         d_center = distance(achieved_goal, desired_goal)
-        # print(achieved_goal[2] - desired_goal[2])
-        # print(d)
-        # x_ratio = 2.3
-        # y_ratio = 2.3
-        x_ratio = 1.5
-        y_ratio = 1.5
-        d_x = abs(achieved_goal[0] - desired_goal[0]) * x_ratio
-        d_y = abs(achieved_goal[1] - desired_goal[1]) * y_ratio
-        d_z = abs(achieved_goal[2] - desired_goal[2]) * 1.5
-        # print(achieved_goal - desired_goal)
-        d_p = 0
-        if d_center < 0.01:
-            d_p = 1
-        if d_bottom < 0.005:
-            d_p += 1
-        elif d_center < 0.01 and (achieved_goal[2] - target_bottom[2]) < self.z_distance_threshold:
-            self.suc_times += 1
-            d_p += self.suc_times * 5
-        else:
-            self.suc_times = 0
-        if self.reward_type == "sparse":
-            return -np.array(d_bottom > self.distance_threshold, dtype=np.float64)
-        else:
-            # if np.array(d < self.distance_threshold, dtype=np.float64).any():
-            #     d = -d
-            # print(d)
-            # d_ee_obj = distance(self.sim.get_body_position('eef'), self.sim.get_body_position('cylinder_obj'))
-            # # print(d_ee_obj)
-            # if d_ee_obj > 0.02:
-            #     d_ratio = 50.0
-            # else:
-            #     d_ratio = 1
-            
-            return -(d_x + d_y + d_z) + d_p
+        d_top = distance(achieved_goal, target_top)
+
+        r_top = 1 - math.tanh(10 * d_top) * 0.2
+        r_center = 1 - math.tanh(10 * d_center) * 0.3
+        r_bot = 1 - math.tanh(10 * d_bottom) * 2.5
+
+        return r_top + r_center + r_bot
+
+        # # print(achieved_goal[2] - desired_goal[2])
+        # # print(d)
+        # # x_ratio = 2.3
+        # # y_ratio = 2.3
+        # x_ratio = 1.5
+        # y_ratio = 1.5
+        # d_x = abs(achieved_goal[0] - desired_goal[0]) * x_ratio
+        # d_y = abs(achieved_goal[1] - desired_goal[1]) * y_ratio
+        # d_z = abs(achieved_goal[2] - desired_goal[2]) * 1.5
+        # # print(achieved_goal - desired_goal)
+        # d_p = 0
+        # if d_center < 0.01:
+        #     d_p = 1
+        # if d_bottom < 0.005:
+        #     d_p += 1
+        # elif d_center < 0.01 and (achieved_goal[2] - target_bottom[2]) < self.z_distance_threshold:
+        #     self.suc_times += 1
+        #     d_p += self.suc_times * 5
+        # else:
+        #     self.suc_times = 0
+        # if self.reward_type == "sparse":
+        #     return -np.array(d_bottom > self.distance_threshold, dtype=np.float64)
+        # else:
+        #     # if np.array(d < self.distance_threshold, dtype=np.float64).any():
+        #     #     d = -d
+        #     # print(d)
+        #     # d_ee_obj = distance(self.sim.get_body_position('eef'), self.sim.get_body_position('cylinder_obj'))
+        #     # # print(d_ee_obj)
+        #     # if d_ee_obj > 0.02:
+        #     #     d_ratio = 50.0
+        #     # else:
+        #     #     d_ratio = 1
+        #
+        #     return -(d_x + d_y + d_z) + d_p

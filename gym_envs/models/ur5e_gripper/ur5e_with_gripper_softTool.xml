@@ -184,7 +184,7 @@
                           <geom class="visual" mesh="base_mount" material="black"/>
                           <geom class="collision" mesh="base_mount"/>
                           <site name="ee_site" pos="0 0 0.06" size="0.005 0.005 0.005" type="sphere" rgba="0.3 0.2 0.1 1"/>
-                          <body name="base" pos="0 0 0.0038" quat="1 0 0 -1">
+                          <!-- <body name="base" pos="0 0 0.0038" quat="1 0 0 -1">
                               <inertial mass="0.777441" pos="0 -2.70394e-05 0.0354675" quat="1 -0.00152849 0 0"
                                   diaginertia="0.000260285 0.000225381 0.000152708"/>
                               <geom class="visual" mesh="base2f85" material="black"/>
@@ -269,7 +269,7 @@
                                       </body>
                                   </body>
                               </body>
-                          </body>
+                          </body> -->
                                                         
                           <body name="cylinder_obj" pos="0 0 0.15" > 
                                 <geom class="collision_tool"/>
@@ -371,16 +371,16 @@
         <position class="size1" name="wrist_1" joint="wrist_1_joint"/>
         <position class="size1" name="wrist_2" joint="wrist_2_joint"/>
         <position class="size1" name="wrist_3" joint="wrist_3_joint"/>
-        <general class="2f85" name="fingers_actuator" tendon="split" forcerange="-5 5" ctrllimited="true" forcelimited="true"
-            ctrlrange="0 255" gainprm="0.3137255 0 0" biasprm="0 -100 -10"/>
+        <!-- <general class="2f85" name="fingers_actuator" tendon="split" forcerange="-5 5" ctrllimited="true" forcelimited="true"
+            ctrlrange="0 255" gainprm="0.3137255 0 0" biasprm="0 -100 -10"/> -->
     </actuator>
     <contact>
-        <exclude body1="base" body2="left_driver"/>
+        <!-- <exclude body1="base" body2="left_driver"/>
         <exclude body1="base" body2="right_driver"/>
         <exclude body1="base" body2="left_spring_link"/>
         <exclude body1="base" body2="right_spring_link"/>
         <exclude body1="right_coupler" body2="right_follower"/>
-        <exclude body1="left_coupler" body2="left_follower"/>
+        <exclude body1="left_coupler" body2="left_follower"/> -->
 
         <exclude body1="cylinder_obj" body2="cylinder_obj1"/>
         <exclude body1="cylinder_obj1" body2="cylinder_obj2"/>
@@ -399,20 +399,20 @@
         <exclude body1="cylinder_obj15" body2="cylinder_obj14"/>
 
     </contact>
-    <tendon>
+    <!-- <tendon>
         <fixed name="split">
             <joint joint="right_driver_joint" coef="0.5"/>
             <joint joint="left_driver_joint" coef="0.5"/>
         </fixed>
-    </tendon>
-    <equality>
+    </tendon> -->
+    <!-- <equality>
         <connect anchor="0 0 0" body1="right_follower" body2="right_coupler" solimp="0.95 0.99 0.001"
             solref="0.005 1"/>
         <connect anchor="0 0 0" body1="left_follower" body2="left_coupler" solimp="0.95 0.99 0.001"
             solref="0.005 1"/>
         <joint joint1="right_driver_joint" joint2="left_driver_joint" polycoef="0 1 0 0 0"
             solimp="0.95 0.99 0.001" solref="0.005 1"/>
-    </equality>
+    </equality> -->
     <sensor>
         <force name="ee_force_sensor" site="ee_site"/>
         <torque name="ee_torque_sensor" site="ee_site"/>
