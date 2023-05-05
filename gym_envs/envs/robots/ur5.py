@@ -51,7 +51,7 @@ class UR(MujocoRobot):
         ee_positon_high: Optional[np.array] = None,
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
-        ee_dis_ratio: float = 0.25,
+        ee_dis_ratio: float = 0.1,
         ee_rot_ratio: float = 0.001,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
@@ -181,8 +181,25 @@ class UR(MujocoRobot):
        
     def ee_displacement_to_target_arm_angles(self, ee_displacement: np.ndarray) -> np.ndarray:
         xyz = 3
-        ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio
-        ee_displacement[xyz:] = ee_displacement[xyz:] * self.ee_rot_ratio
+
+        if self.dsl is True:
+            dis_ratio_d = 0.05
+            dis_ratio_r = 1
+            current_ft = np.copy(self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
+            ee_dis_x = -math.tanh(current_ft[0])
+            ee_dis_y = math.tanh(current_ft[1])
+            ee_dis_z = -math.tanh(current_ft[2])
+            ee_dis_rx = -math.tanh(10 * current_ft[3])
+            ee_dis_ry = math.tanh(10 * current_ft[4])
+            ee_dis_rz = -math.tanh(10 * current_ft[5])
+            dsl_ee_dis = np.array([ee_dis_x, ee_dis_y, ee_dis_z, ee_dis_rx, ee_dis_ry, ee_dis_rz])
+
+            ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio + dsl_ee_dis[:xyz] * dis_ratio_d
+            ee_displacement[xyz:] = ee_displacement[xyz:] * self.ee_rot_ratio + dsl_ee_dis[xyz:] * dis_ratio_r
+
+        else:
+            ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio
+            ee_displacement[xyz:] = ee_displacement[xyz:] * self.ee_rot_ratio
         # print(ee_displacement)
         # target_ee_position = np.clip(ee_displacement[:xyz], self.ee_position_low, self.ee_position_high)
         current_joint = np.array([self.get_joint_angle(joint=self.joint_list[i]) for i in range(6)])

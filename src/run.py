@@ -217,10 +217,10 @@ for i in range(1):
                 obs = env.reset()
         # plt.subplot(1, 2, 1)
         # plt.show()
-        #         if args.d_s_l is False:
-        #             np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_nodsl_"+ str(i) +'.npy', obs_record)
-        #         else:
-        #             np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_"+ str(i) +'.npy', obs_record)
+                if args.d_s_l is False:
+                    np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_nodsl_"+ str(i) +'.npy', obs_record)
+                else:
+                    np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_"+ str(i) +'.npy', obs_record)
     
     elif args.realrobot is True:
         env = gym.make(

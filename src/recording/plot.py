@@ -94,8 +94,8 @@ import numpy as np
 # obs_file_name = 'vision-touch4mm0221163259_real_nodsl.npy' # fail
 # obs_file_name_real = 'vision-touch4mm0221163143_real_nodsl.npy' # suc
 
-obs_file_name = 'vision-touch1mm0228113852_real.npy'
-obs_file_name_real = 'vision-touch1mm0228113852_real.npy'
+obs_file_name = 'vision-touch4mm0502180129_2.npy'
+obs_file_name_real = 'vision-touch4mm0502180129_1.npy'
 obs_real = np.load(obs_file_name_real)
 obs = np.load(obs_file_name)
 obs_touch_shape = obs.shape
@@ -103,7 +103,7 @@ obs_real_shape = obs_real.shape
 print(obs_touch_shape)
 fig = plt.figure()
 for plt_index in range(obs_touch_shape[1]):
-    plt.subplot(3,5,plt_index+1)
+    plt.subplot(4,5,plt_index+1)
     if plt_index == 0:
         plt.plot(np.linspace(0, obs_touch_shape[0]-1, obs_touch_shape[0]), obs[:, plt_index], label="sim")
         plt.plot(np.linspace(0, obs_real_shape[0]-1, obs_real_shape[0]), obs_real[:, plt_index], label="real")
