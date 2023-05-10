@@ -7,6 +7,15 @@ python run.py -m pih_ -e URPiH-v1 -t 6e5 -a TD3 -l
 
 # the new command
 ## rendering
+### render without dsl and dr
 python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m best_model -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0001 -hs 4mm -r
+
+### render with dsl
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m best_model -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0001 -hs 4mm -r -dsl
+
 ## learning
-python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih-touch-ee-4mm-e2mm_ -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0001 -hs 4mm -l
+### learning with dsl
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih_visiontouch_dsl_ -e URPiHDense-v1 -t 2000000 -a PPO -v vision-touch -lr 0.0001 -hs 4mm -l -dsl
+
+### learning with dsl and dr
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih_touch_dsl_dr_ -e URPiHDense-v1 -t 2000000 -a PPO -v vision-touch -lr 0.0001 -hs 4mm -l -dsl -dr

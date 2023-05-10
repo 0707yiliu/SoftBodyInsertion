@@ -24,6 +24,7 @@ class URPeginHoleEnv(RobotTaskEnv):
         match_shape: bool = True,
         real_robot: bool = False,
         dsl: bool = False,
+        domain_randomization: bool = False,
         ) -> None:
         # print("--------")
         sim = Mujoco_Func(
@@ -31,6 +32,7 @@ class URPeginHoleEnv(RobotTaskEnv):
             vision_touch=vision_touch,
             hole_size=hole_size,
             real_robot=real_robot,
+            domain_randomization=domain_randomization,
             )
         robot = UR(
             sim=sim,

@@ -126,7 +126,8 @@ class PeginHole(Task):
         hole_bot_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0003
         # print("sim tool bot:", self.sim.get_site_position('hole_bottom'))
         # print("sim tool top:", self.sim.get_site_position('hole_top'))
-        obs = np.concatenate((hole_top_position, hole_bot_position))
+        # obs = np.concatenate((hole_top_position, hole_bot_position))
+        obs = np.copy(hole_top_position)
         # print("hole top pos:", obs[:3])
         return obs
 

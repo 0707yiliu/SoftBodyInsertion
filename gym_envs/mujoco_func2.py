@@ -77,6 +77,7 @@ class Mujoco_Func:
         file_root: str = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/",
         hole_size: str = "4mm",
         real_robot: bool = False,
+        domain_randomization: bool = False,
     ) -> None:
         if real_robot is True:
             urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
@@ -87,22 +88,58 @@ class Mujoco_Func:
             xml_file = 'ur5e_gripper/scene.xml'
         elif vision_touch == 'vision-touch' or vision_touch == 'touch':
             xml_file = 'ur5e_gripper/scene.xml'
-        file = file_root + xml_file
-        self.model = mujoco.MjModel.from_xml_path(file)
+        
+        self.xml_file = file_root + xml_file
+        self.model = mujoco.MjModel.from_xml_path(self.xml_file)
         self.data = mujoco.MjData(self.model)
         mujoco.mj_forward(self.model, self.data)
         if render:
             self.viewer = mujoco_viewer.MujocoViewer(self.model, self.data)
         self.render = render
 
+        self.domain_randomization = domain_randomization
+        self.file_root = file_root
+        self.tool_stiffness_range = np.array([0.05, 1])
+        self.tool_damper_range = np.array([0.008, 0.1])
+
         self.n_substeps = 1
         self.timestep = 0.001
+
+    def reload_xml(self):
+        try:
+            import xml.etree.cElementTree as ET
+        except ImportError:
+            import xml.etree.ElementTree as ET
+        tool_xml = self.file_root + 'ur5e_gripper/ur5e_with_gripper_softTool.xml'
+        tree = ET.parse(tool_xml)
+        root = tree.getroot()
+        # domain randomization for tool's stiffness and damper
+        tool_stiffness = str(np.random.uniform(low=self.tool_stiffness_range[0], high=self.tool_stiffness_range[1]))
+        tool_damper = str(np.random.uniform(low=self.tool_damper_range[0], high=self.tool_damper_range[1]))
+        # file writing
+        i = 0
+        for student in root.iter('joint'):
+            i += 1
+            if i == 2:
+                student.set("stiffness", tool_stiffness)
+                student.set("damping", tool_damper)
+                # student.attrib["stiffness"] = 0.08
+                # print(student.attrib)
+        tree.write(self.file_root+'ur5e_gripper/ur5e_with_gripper_softTool.xml')
+        time.sleep(0.01) # waiting file writing
+        self.model = mujoco.MjModel.from_xml_path(self.xml_file)
+        self.data = mujoco.MjData(self.model)
+        mujoco.mj_forward(self.model, self.data)
+        if self.render:
+            self.viewer = mujoco_viewer.MujocoViewer(self.model, self.data)
 
     @property
     def dt(self):
         return self.timestep * self.n_substeps
 
     def reset(self) -> None:
+        if self.domain_randomization is True:
+            self.reload_xml()
         mujoco.mj_resetData(self.model, self.data)
 
     def step(self) -> None:

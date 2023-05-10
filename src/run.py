@@ -38,6 +38,7 @@ parser.add_argument('-hs', '--hole_size', type=str, default="2cm", help="pick th
 parser.add_argument('-ms', '--match_shape', action='store_false', help="default to match the shape (add z-axis action into action space)")
 parser.add_argument('-real', '--realrobot', action='store_true', help='execte the model on the real robot')
 parser.add_argument('-dsl', '--d_s_l', action='store_true', help='execte the model with dynamic safety lock method')
+parser.add_argument('-dr', '--domain_randomization', action='store_true', help='execte the model with domain randomization')
 
 args = parser.parse_args()
 
@@ -80,6 +81,7 @@ for i in range(1):
                 hole_size=args.hole_size,
                 match_shape=args.match_shape,
                 dsl = args.d_s_l,
+                domain_randomization = args.domain_randomization,
                 )
             # print("--------")
             eval_callback = EvalCallback(
@@ -125,6 +127,7 @@ for i in range(1):
             hole_size=args.hole_size,
             match_shape=args.match_shape,
             dsl = args.d_s_l,
+            domain_randomization = args.domain_randomization,
             )
         log_dir = root_dir_tensorboard + args.model_dir + running_time
        
@@ -190,6 +193,7 @@ for i in range(1):
             normalizeObs=args.normalize,
             hole_size = args.hole_size,
             dsl = args.d_s_l,
+            domain_randomization = args.domain_randomization,
             )
 
         if args.alg == 'TD3':
@@ -231,6 +235,7 @@ for i in range(1):
             hole_size = args.hole_size,
             real_robot = args.realrobot,
             dsl = args.d_s_l,
+            domain_randomization = args.domain_randomization,
             )
         if args.alg == 'TD3':
             # print(root_dir_model + args.model_dir + '.pkl')
