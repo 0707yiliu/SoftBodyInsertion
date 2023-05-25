@@ -17,8 +17,4 @@ KDL-pkg
 
 This sub-work build up the env with triangle obj and hole, the PPO-algorithm is used to train the model with different gaps (we used the gap proportion the redefine the gap between obj & hole finally).
 
-Performance:
-<!-- mp4 -->
-<video width="320" height="240" controls>
-  <source src="src/vision-touch-models.mp4" type="video/mp4">
-</video>
+Performance:[https://www.youtube.com/watch?v=1npPWYU3B6g](https://www.youtube.com/watch?v=1npPWYU3B6g)
