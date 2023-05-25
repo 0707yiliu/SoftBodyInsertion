@@ -6,8 +6,11 @@ This project provides diff models to complete the assembly tasks (peg-in-hole) i
 # Env Requstion
 
 Mujoco >= 2.3
+
 Python >= 3.7
+
 KDL-pkg
+
 ...
 
 # Rigid body assembly
@@ -16,6 +19,6 @@ This sub-work build up the env with triangle obj and hole, the PPO-algorithm is 
 
 Performance:
 <!-- mp4 -->
-<video id="video" controls="" preload="none" poster="pih_rigid">
-      <source id="pih_rigid" src="mp4" type="src/vision-touch-models.mp4">
-</videos>
+<video width="320" height="240" controls>
+  <source src="src/vision-touch-models.mp4" type="video/mp4">
+</video>
