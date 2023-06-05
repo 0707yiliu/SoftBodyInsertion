@@ -1,11 +1,8 @@
 Metadata-Version: 2.1
 Name: gym-envs
 Version: 0.0.0
-Summary: UNKNOWN
 Author: Yi Liu
 Author-email: yiyiliu.liu@ugent.be
-License: UNKNOWN
-Platform: UNKNOWN
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
@@ -14,6 +11,3 @@ Provides-Extra: tests
 Provides-Extra: codestyle
 Provides-Extra: docs
 Provides-Extra: extra
-
-UNKNOWN
-

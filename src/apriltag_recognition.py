@@ -4,9 +4,49 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys, os, math, time
 from scipy.spatial.transform import Rotation as R
+import pyzed.sl as sl
+
+import rtde_receive
+rtde_r = rtde_receive.RTDEReceiveInterface("10.42.0.163")
+actual_q = rtde_r.getActualQ()
 
 class AprilTag:
     def __init__(self) -> None:
+        # ----------- ZED initial ------------
+        self.zed = sl.Camera()
+        self.init_params = sl.InitParameters()
+        self.init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
+        self.init_params.camera_fps = 30  # Set fps at 30
+        err = self.zed.open(self.init_params)
+        if err != sl.ERROR_CODE.SUCCESS:
+            exit(1)
+        self.runtime_parameters = sl.RuntimeParameters()
+        self.mat = sl.Mat()
+        if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            # A new image is available if grab() returns SUCCESS
+            self.zed.retrieve_image(self.mat, sl.VIEW.LEFT)
+            self.cam_with = self.mat.get_width()
+            self.cam_height = self.mat.get_height()
+        self.FHD_fx = 1070.09
+        self.FHD_fy = 1070.18
+        self.FHD_cx = 983.14
+        self.FHD_cy = 532.874
+        self.FHD_k1 = -0.0533319
+        self.FHD_k2 = 0.0260878
+        self.FHD_k3 = -0.0104227
+        self.FHD_p1 = 0.000340606
+        self.FHD_p2 = 0.000133078
+        # ------------------------------------------
+        # fx = 1070.09
+        # fy = 1070.18
+        # cx = 983.14
+        # cy = 532.874
+        # k1 = -0.0533319
+        # k2 = 0.0260878
+        # p1 = 0.000340606
+        # p2 = 0.000133078
+        # k3 = -0.0104227
+
         self.cap = cv2.VideoCapture(4) # camera ID
 
         self.cam_with = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -42,7 +82,7 @@ class AprilTag:
                     img_points.append(corners)
                 cv2.drawChessboardCorners(img_r, (w, h), corners, ret)
                 print("get the corner:", num_imgs)
-                # _, rvec, tvec = cv2, 
+                # _, rvec, tvec = cv2,
                 cv2.imshow("calibration", img_r)
                 time.sleep(1.5)
                 if cv2.waitKey(1) & 0xFF == 27:
@@ -65,46 +105,38 @@ class AprilTag:
 
 
     def test(self):
-        # pass
-        i = 0
-        n = None
-        print(self.cam_with)
-        print(self.cam_height)
-        K = np.array([[263.04691686,   0.,         331.23900253],
-                      [  0.,         264.03675933, 197.48212171],
-                      [  0.      ,     0.  ,         1.        ]]) 
-        K1 = np.array([263.04691686,  264.03675933, 331.23900253, 197.48212171])
-        ARROW_LENGTH = 80
+        # ----------------- For ZED ------------
+        K = np.array([[self.FHD_fx, 0., self.FHD_cx],
+                      [0., self.FHD_fy, self.FHD_cy],
+                      [0., 0., 1.]])
+        K1 = np.array([self.FHD_fx, self.FHD_fy, self.FHD_cx, self.FHD_cy])
         id_root = 6
-        id_object = 7
-
-        tag_len = 6.955 # centmeters
-        tag_side = 1.84
+        id_object = 8
+        tag_len = 3.59  # centmeters (smaller size)
+        tag_outer_side = 0.91 # distance between the side of tag to outer side
         objoffset = 3
         root_z_offset = -0.3023
-
-        zed_focal = K[0,0]
-        zed_center_x = K[0,2]
-        zed_center_y = K[1,2]
-        root_real_x = 0
-        root_real_y = 0
-        root_real_z = 0
-        obj_real_x = 0
-        obj_real_y = 0
-        obj_real_z = 0
-        root_pos = 0 
-        obj_pos = 0
         rootTrootside = np.identity(4)
         rootsideTcam = np.identity(4)
         camTobjside = np.identity(4)
         objsideTobj = np.identity(4)
         base_dia = 12.8 + 2 * 0.45
-        rootTrootside[0, 3] = (base_dia/2 + tag_len/2 + tag_side)
-        rootTrootside[2, 3] = root_z_offset
-        objsideTobj[0, 3] = -(tag_len/2 + tag_side + objoffset)
+        # rootTrootside[0, 3] = (base_dia / 2 + tag_len / 2 + tag_outer_side)
+        # rootTrootside[2, 3] = root_z_offset
+        # objsideTobj[0, 3] = -(tag_len / 2 + tag_outer_side + objoffset)
+        # --------------------------------------
         while True:
-            grabbed, img = self.cap.read()
-            img = img[0:376, 0:672]
+            if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+                # A new image is available if grab() returns SUCCESS
+                self.zed.retrieve_image(self.mat, sl.VIEW.LEFT)
+                img = self.mat.get_data()
+
+                cv2.waitKey(1)
+            else:
+                cv2.waitKey(1)
+            # grabbed, img = self.cap.read()
+            # img = img[0:376, 0:672]
+
             # print(img.shape) #(376, 1344, 3)
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             at_detactor = apriltag.Detector(apriltag.DetectorOptions(families="tag36h11"))
@@ -185,9 +217,9 @@ class AprilTag:
                 rootsideTobjside = np.matmul(rootsideTcam, camTobjside)
                 rootTobjside = np.matmul(rootTrootside,rootsideTobjside)
                 rootTobj = np.matmul(rootTobjside, objsideTobj)
-                x = -rootTobj[0, 3] / 100
-                y = rootTobj[1, 3] / 100
-                z = -rootTobj[2, 3] / 100
+                x = -rootsideTobjside[0, 3] / 100
+                y = rootsideTobjside[1, 3] / 100
+                z = -rootsideTobjside[2, 3] / 100
                 print(x, y, z)
                 # print("dis:", dis_root_obj)
                 # print(root_pos - obj_pos)
@@ -208,7 +240,7 @@ class AprilTag:
         cv2.destroyAllWindows()
         self.cap.release()
 cam = AprilTag()
-cam.test()
+cam.test()/
 # cam.stereo_calibration_chessboard()
 # filename = "/home/yi/apriltag_source/tag36h11_6.png"
 

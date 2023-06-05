@@ -1,9 +1,10 @@
-# MODEL: AprilTag markers detection and camera calibration
+# MODEL: AprilTag markers detection and camera calibration (ZED Python API with cv2 lib)
 # AUTHOR: Yi Liu @AiRO 
 # UNIVERSITY: UGent-imec
 # DEPARTMENT: Faculty of Engineering and Architecture
 # Control Engineering / Automation Engineering
 
+import pyzed.sl as sl
 import cv2
 import apriltag
 import numpy as np
@@ -13,20 +14,50 @@ from scipy.spatial.transform import Rotation as R
 
 class AprilTag:
     def __init__(self) -> None:
-        self.cap = cv2.VideoCapture(4) # camera ID
 
-        self.cam_with = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.cam_height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
-        self.fx = 267
-        self.fy = 268
-        self.K = np.array([[263.04691686,   0.,         331.23900253],
-                      [  0.,         264.03675933, 197.48212171],
-                      [  0.      ,     0.  ,         1.        ]]) 
-        self.K1 = np.array([263.04691686,   264.03675933,         331.23900253, 197.48212171])
+        # ----------- ZED initial ------------
+        self.zed = sl.Camera()
+        self.init_params = sl.InitParameters()
+        self.init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
+        self.init_params.camera_fps = 30  # Set fps at 30
+        err = self.zed.open(self.init_params)
+        if err != sl.ERROR_CODE.SUCCESS:
+            exit(1)
+        self.runtime_parameters = sl.RuntimeParameters()
+        self.mat = sl.Mat()
+        if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            # A new image is available if grab() returns SUCCESS
+            self.zed.retrieve_image(self.mat, sl.VIEW.LEFT)
+            self.cam_with = self.mat.get_width()
+            self.cam_height = self.mat.get_height()
+        self.FHD_fx = 1070.09
+        self.FHD_fy = 1070.18
+        self.FHD_cx = 983.14
+        self.FHD_cy = 532.874
+        self.FHD_k1 = -0.0533319
+        self.FHD_k2 = 0.0260878
+        self.FHD_k3 = -0.0104227
+        self.FHD_p1 = 0.000340606
+        self.FHD_p2 = 0.000133078
+        # ------------------------------------------
+        self.K = np.array([[self.FHD_fx, 0., self.FHD_cx],
+                      [0., self.FHD_fy, self.FHD_cy],
+                      [0., 0., 1.]])
+        self.K1 = np.array([self.FHD_fx, self.FHD_fy, self.FHD_cx, self.FHD_cy])
+        # self.cap = cv2.VideoCapture(4) # camera ID
+        #
+        # self.cam_with = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        # self.cam_height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        #
+        # self.fx = 267
+        # self.fy = 268
+        # self.K = np.array([[263.04691686,   0.,         331.23900253],
+        #               [  0.,         264.03675933, 197.48212171],
+        #               [  0.      ,     0.  ,         1.        ]])
+        # self.K1 = np.array([263.04691686,   264.03675933,         331.23900253, 197.48212171])
         self.base_dia = 12.8 + 2*0.45
         self.id_root = 6
-        self.id_object = 7
+        self.id_object = 8
         self.tag_len = 6.955
         self.tag_side = 1.84
         self.objoffset = 3
@@ -92,8 +123,6 @@ class AprilTag:
         print("dist:\n", dist)  # 畸变系数
         # print("rvecs:\n", rvecs)  # 旋转向量  # 外参数
         # print("tvecs:\n", tvecs ) # 平移向量  # 外参数
-
-
 
     def test(self):
         # pass
@@ -231,8 +260,18 @@ class AprilTag:
         self.cap.release()
     
     def calculate_UR3Root2Target(self) -> np.ndarray:
-        grabbed, img = self.cap.read()
-        img = img[0:376, 0:672]
+        # cv2 from webcam -----------
+        # grabbed, img = self.cap.read()
+        # img = img[0:376, 0:672]
+        # ----------------------------
+        if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            # A new image is available if grab() returns SUCCESS
+            self.zed.retrieve_image(self.mat, sl.VIEW.LEFT)
+            img = self.mat.get_data()
+            cv2.waitKey(1)
+        else:
+            print("can not get the image from ZED.")
+            cv2.waitKey(1)
         # print(img.shape) #(376, 1344, 3)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         at_detactor = apriltag.Detector(apriltag.DetectorOptions(families="tag36h11"))

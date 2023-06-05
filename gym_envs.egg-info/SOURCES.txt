@@ -1,9 +1,10 @@
 README.md
 setup.py
 gym_envs/__init__.py
-gym_envs/mujoco_func.py
+gym_envs/mujoco_func1.py
 gym_envs/mujoco_func2.py
 gym_envs/utils.py
+gym_envs/xml_file_rewrite.py
 gym_envs.egg-info/PKG-INFO
 gym_envs.egg-info/SOURCES.txt
 gym_envs.egg-info/dependency_links.txt

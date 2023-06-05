@@ -179,7 +179,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         # self._saved_goal = dict()
         # print("over here")
 
-    def reset(self, seed: Optional[int] = None) -> Dict[str, np.ndarray]:
+    def reset(self, seed: Optional[int] = None, options={}) -> tuple:
         # self.task.np_random, seed = gym.utils.seeding.np_random(seed)
         # with self.sim.no_rendering():
         #     self.robot.reset()
@@ -187,9 +187,10 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         self.robot.reset()
         self.task.reset()
         self.sim.set_forward() # update env statement
+        info = dict()
         # if self.init_grasping:
         #     self.robot._init_grasping()
-        return self._get_obs()
+        return self._get_obs(), info
     
     def _get_obs(self) -> Dict[str, np.ndarray]:
         robot_obs = self.robot.get_obs()  # robot state
@@ -264,5 +265,6 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
             else:
                 self._num_goal = 0
                 done = False
-        return obs, reward, done, info
+        truncated=False
+        return obs, reward, done, truncated, info
     

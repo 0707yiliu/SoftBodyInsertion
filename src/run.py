@@ -194,6 +194,7 @@ for i in range(1):
             hole_size = args.hole_size,
             dsl = args.d_s_l,
             domain_randomization = args.domain_randomization,
+            render_mode="human",
             )
 
         if args.alg == 'TD3':
@@ -204,7 +205,7 @@ for i in range(1):
         elif args.alg == 'SAC':
             model = TD3.load(root_dir_model + args.model_dir, env=env)
         # plt.figure(1)
-        obs = env.reset()
+        obs, _ = env.reset()
 
         observation_shape = obs.shape
         obs_record = [np.zeros(observation_shape)]
@@ -218,7 +219,7 @@ for i in range(1):
                 # np.save("obs.npy", obs_record)
                 i += 1
                 print('Done')
-                obs = env.reset()
+                obs, _ = env.reset()
         # plt.subplot(1, 2, 1)
         # plt.show()
                 if args.d_s_l is False:
@@ -236,6 +237,7 @@ for i in range(1):
             real_robot = args.realrobot,
             dsl = args.d_s_l,
             domain_randomization = args.domain_randomization,
+            render_mode="human",
             )
         if args.alg == 'TD3':
             # print(root_dir_model + args.model_dir + '.pkl')
