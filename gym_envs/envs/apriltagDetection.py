@@ -293,7 +293,7 @@ class AprilTag:
             self.z = self.z / self.z[2]
             self.x = np.matmul(P, np.array([[1], [0], [0], [1]]))
             self.x = self.x / self.x[2]
-            self.y = np.matmul(P, np.array([[0], [1], [0], [1]]))
+            self.y = np.matmul(P, np.array([[0], [-1], [0], [1]]))
             self.y = self.y / self.y[2]
             # y = x[:2].T
             # print(y)
@@ -312,8 +312,8 @@ class AprilTag:
             rootTobjside = np.matmul(self.rootTrootside, rootsideTobjside)
             self.rootTobj = np.matmul(rootTobjside, self.objsideTobj)
             # now we just output x, y, z (unit: meter)
-            self.x = -self.rootTobj[0, 3] / 100
-            self.y = self.rootTobj[1, 3] / 100
+            self.x = self.rootTobj[0, 3] / 100
+            self.y = -self.rootTobj[1, 3] / 100
             self.z = -self.rootTobj[2, 3] /100
             # print(x, y, z)
         # cv2.imshow("camera-image", img)  

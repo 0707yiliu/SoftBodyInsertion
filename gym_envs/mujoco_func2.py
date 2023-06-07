@@ -80,7 +80,7 @@ class Mujoco_Func:
         domain_randomization: bool = False,
     ) -> None:
         if real_robot is True:
-            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
+            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper_real.urdf"
         else:
             urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
         self.urxkdl = urkdl.URx_kdl(urDH_file)

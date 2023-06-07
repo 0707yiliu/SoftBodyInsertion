@@ -3,12 +3,12 @@ import apriltag
 import numpy as np
 import matplotlib.pyplot as plt
 import sys, os, math, time
+
+import rtde_control
 from scipy.spatial.transform import Rotation as R
 import pyzed.sl as sl
 
-# import rtde_receive
-# rtde_r = rtde_receive.RTDEReceiveInterface("10.42.0.163")
-# actual_q = rtde_r.getActualQ()
+import rtde_receive
 
 class AprilTag:
     def __init__(self) -> None:
@@ -47,13 +47,13 @@ class AprilTag:
         # p2 = 0.000133078
         # k3 = -0.0104227
 
-        self.cap = cv2.VideoCapture(4) # camera ID
-
-        self.cam_with = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.cam_height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
-        self.fx = 267
-        self.fy = 268
+        # self.cap = cv2.VideoCapture(4) # camera ID
+        #
+        # self.cam_with = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        # self.cam_height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        #
+        # self.fx = 267
+        # self.fy = 268
 
     def stereo_calibration_chessboard(self):
         w = 9
@@ -104,19 +104,20 @@ class AprilTag:
 
 
 
-    def test(self):
+    def tag_dis(self):
         # ----------------- For ZED ------------
         K = np.array([[self.FHD_fx, 0., self.FHD_cx],
                       [0., self.FHD_fy, self.FHD_cy],
                       [0., 0., 1.]])
         K1 = np.array([self.FHD_fx, self.FHD_fy, self.FHD_cx, self.FHD_cy])
-        id_root = 6
+        id_root = 10
         id_object = 8
         tag_len = 3.59  # centmeters (smaller size)
         tag_outer_side = 0.91 # distance between the side of tag to outer side
         objoffset = 3
         obj_offset_y = 3.97
         obj_offset_x = 3
+        obj_offset_z = 2.5
         root_z_offset = -0.3023
         rootTrootside = np.identity(4)
         rootsideTcam = np.identity(4)
@@ -124,8 +125,11 @@ class AprilTag:
         objsideTobj = np.identity(4)
         base_dia = 12.8 + 2 * 0.45
         # rootTrootside[0, 3] = (base_dia / 2 + tag_len / 2 + tag_outer_side)
+        rootTrootside[1, 3] = -(tag_len / 2 + tag_outer_side)
         # rootTrootside[2, 3] = root_z_offset
         # objsideTobj[0, 3] = -(tag_len / 2 + tag_outer_side + objoffset)
+        objsideTobj[1, 3] = -(tag_len / 2 + tag_outer_side + obj_offset_y)
+        objsideTobj[2, 3] = -obj_offset_z
         # --------------------------------------
         while True:
             if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
@@ -219,9 +223,9 @@ class AprilTag:
                 rootsideTobjside = np.matmul(rootsideTcam, camTobjside)
                 rootTobjside = np.matmul(rootTrootside,rootsideTobjside)
                 rootTobj = np.matmul(rootTobjside, objsideTobj)
-                x = rootsideTobjside[0, 3] / 100
-                y = -rootsideTobjside[1, 3] / 100
-                z = -rootsideTobjside[2, 3] / 100
+                x = rootTobj[0, 3] / 100
+                y = -rootTobj[1, 3] / 100
+                z = -rootTobj[2, 3] / 100
                 print(x, y, z)
                 # print("dis:", dis_root_obj)
                 # print(root_pos - obj_pos)
@@ -241,9 +245,122 @@ class AprilTag:
                    break
         cv2.destroyAllWindows()
         self.cap.release()
+    def tag_robot_calibration(self):
+        # kinematic with urdf
+        import gym_envs.envs.ur3_kdl as urkdl
+        import gym_envs.envs.robots.robotiq_gripper as robotiq_gripper
+        urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper_real.urdf"
+        urxkdl = urkdl.URx_kdl(urDH_file)
+        # qpos = urxkdl.inverse(current_joint, target_position, target_orientation)
+        # ee_pos = urxkdl.forward(qpos=qpos)
+        ## real robot connection ------------
+        rtde_r = rtde_receive.RTDEReceiveInterface("10.42.0.162")
+        rtde_c = rtde_control.RTDEControlInterface("10.42.0.162")
+        j_init = np.array([1.31423293, -1.55386663, 1.32749743, -1.34477619, -1.57079633, -0.10715635])
+        # print("Creating gripper...")
+        # gripper = robotiq_gripper.RobotiqGripper()
+        # print("Connecting to gripper...")
+        # gripper.connect("10.42.0.162", 63352)
+        # print("Activating gripper...")
+        # gripper.activate()
+        actual_q = rtde_r.getActualQ()
+        print("real robot qpos:", actual_q)
+        vel = 0.3
+        acc = 0.3
+        #TODO: calculate distance between the tag biside robot and the hole tag to calibrate the robot with tag
+        ## init arm ------------
+        target1joint = np.array([-2.9200850168811243, -1.4415864211371918, -2.041741371154785, 5.058547007828512, 1.6527293920516968, 0.25450488924980164])
+        ee_pos = urxkdl.forward(qpos=target1joint)
+        print("forward ee pos:", ee_pos)
+        rtde_c.moveJ(target1joint, vel, acc)
+        # gripper.move_and_wait_for_pos(203, 255, 255)
+        ## get apriltag position ----------
+        K = np.array([[self.FHD_fx, 0., self.FHD_cx],
+                      [0., self.FHD_fy, self.FHD_cy],
+                      [0., 0., 1.]])
+        K1 = np.array([self.FHD_fx, self.FHD_fy, self.FHD_cx, self.FHD_cy])
+        id_root = 10
+        id_object = 8
+        tag_len = 3.59  # centmeters (smaller size)
+        tag_outer_side = 0.91  # distance between the side of tag to outer side
+        objoffset = 3
+        obj_offset_y = 3.97
+        obj_offset_x = 3
+        obj_offset_z = 2.5
+        root_z_offset = -0.3023
+        rootTrootside = np.identity(4)
+        rootsideTcam = np.identity(4)
+        camTobjside = np.identity(4)
+        objsideTobj = np.identity(4)
+        base_dia_x = 10
+        base_dia_y = 10
+        base_dia_z = 2.1
+        rootTrootside[0, 3] = (base_dia_x + tag_len / 2 + tag_outer_side)
+        rootTrootside[1, 3] = (base_dia_y + tag_len / 2 + tag_outer_side)
+        rootTrootside[2, 3] = base_dia_z
+        # objsideTobj[0, 3] = -(tag_len / 2 + tag_outer_side + objoffset)
+        objsideTobj[1, 3] = -(tag_len / 2 + tag_outer_side + obj_offset_y)
+        objsideTobj[2, 3] = -obj_offset_z
+        for _ in range(100):
+            if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+                # A new image is available if grab() returns SUCCESS
+                self.zed.retrieve_image(self.mat, sl.VIEW.LEFT)
+                img = self.mat.get_data()
+
+                cv2.waitKey(1)
+            else:
+                cv2.waitKey(1)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            at_detactor = apriltag.Detector(apriltag.DetectorOptions(families="tag36h11"))
+            tags = at_detactor.detect(gray)
+            # print(tags)
+            for tag in tags:
+                H = tag.homography
+                # print(H)
+                num, Rs, Ts, Ns = cv2.decomposeHomographyMat(H, K)
+                r = R.from_matrix(Rs[3].T)
+                M, e1, e2 = at_detactor.detection_pose(tag, K1)
+                # print(M)
+                P = M[:3, :4]
+                _t = M[:3, 3]
+                t = tag_len * _t
+                P = np.matmul(K, P)
+                # print(P)
+                z = np.matmul(P, np.array([[0], [0], [-1], [1]]))
+                # print(z)
+                z = z / z[2]
+                x = np.matmul(P, np.array([[1], [0], [0], [1]]))
+                x = x / x[2]
+                y = np.matmul(P, np.array([[0], [-1], [0], [1]]))
+                y = y / y[2]
+                M[:3, 3] = t
+                if tag.tag_id == id_root:
+                    root_pos = np.copy(np.squeeze(t.T))
+                    rootsideTcam = np.linalg.inv(M)
+                    # print(M)
+                elif tag.tag_id == id_object:
+                    obj_pos = np.copy(np.squeeze(t.T))
+                    camTobjside = np.copy(M)
+                # dis_root_obj = np.linalg.norm(root_pos - obj_pos)
+                rootsideTobjside = np.matmul(rootsideTcam, camTobjside)
+                rootTobjside = np.matmul(rootTrootside, rootsideTobjside)
+                rootTobj = np.matmul(rootTobjside, objsideTobj)
+                x = rootTobj[0, 3] / 100
+                y = -rootTobj[1, 3] / 100
+                z = -rootTobj[2, 3] / 100
+        # current_joint = rtde_r.getActualQ()
+        current_joint = target1joint
+        target_position = np.array([x, y, z])
+        print("tag dis:" ,target_position)
+        target_orientation = np.array([-1.0, 0.0, 0.0, 0.0])
+        qpos = urxkdl.inverse(current_joint, target_position, target_orientation)
+        print("ik qpos:", qpos)
+        print("real robot ee pos:", rtde_r.getActualTCPPose()[:3])
+
 cam = AprilTag()
-cam.test()
+# cam.tag_dis()
 # cam.stereo_calibration_chessboard()
+cam.tag_robot_calibration()
 # filename = "/home/yi/apriltag_source/tag36h11_6.png"
 
 # img = cv2.imread(filename)
