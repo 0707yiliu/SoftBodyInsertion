@@ -5,17 +5,17 @@ python run.py -m pih_1007172700 -e URPiH-v1 -a TD3 -r
 # trainning
 python run.py -m pih_ -e URPiH-v1 -t 6e5 -a TD3 -l 
 
-# the new command
+# the new command, there are other arguments that can be configed, which in py-file run.py
 ## rendering
 ### render without dsl and dr
-python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m best_model -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0001 -hs 4mm -r
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m best_model -e URPiHDense-v1 -t 2000000 -a PPO -v vision-touch -lr 0.0001 -hs 4mm -r -nor -g 3
 
 ### render with dsl
-python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m best_model -e URPiHDense-v1 -t 2000000 -a PPO -v touch -lr 0.0001 -hs 4mm -r -dsl
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m best_model -e URPiHDense-v1 -t 2000000 -a PPO -v vision-touch -lr 0.0001 -hs 4mm -r -dsl -dr -nor -g 3
 
 ## learning
 ### learning with dsl
-python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih_visiontouch_dsl_ -e URPiHDense-v1 -t 2000000 -a PPO -v vision-touch -lr 0.0001 -hs 4mm -l -dsl
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py  -e URPiHDense-v1 -t 6000000 -a PPO -v vision-touch -lr 0.003 -hs 4mm -l -dsl -nor -g 3
 
 ### learning with dsl and dr
-python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py -m pih_touch_dsl_dr_ -e URPiHDense-v1 -t 2000000 -a PPO -v vision-touch -lr 0.0001 -hs 4mm -l -dsl -dr
+python /home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/run.py  -e URPiHDense-v1 -t 6000000 -a PPO -v vision-touch -lr 0.003 -hs 4mm -l -dsl -dr -nor -g 3

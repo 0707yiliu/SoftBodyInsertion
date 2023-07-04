@@ -18,20 +18,20 @@ from sb3_contrib import RecurrentPPO
 from stable_baselines3 import DDPG, TD3, SAC, HerReplayBuffer, PPO
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.callbacks import CallbackList, BaseCallback, CheckpointCallback, EvalCallback
-
+import torch as th
 import numpy as np
 
 parser = argparse.ArgumentParser(description="runner for UR_Gym")
 parser.add_argument('-a', '--alg', type=str, default="TD3", help="pick the used algorithm")
 parser.add_argument('-t', '--total_timesteps', type=int, default=5e5, help='the total trainning time steps')
-parser.add_argument('-m', '--model_dir',  help='chose the displayed model')
+parser.add_argument('-m', '--model_dir',  default="pih", help='chose the displayed model')
 parser.add_argument('-l', '--learn', action='store_true', help="learning (True)/displaying (False)")
 parser.add_argument('-e', '--env', type=str, default="URReach-v1", help='select the trainning environment')
 parser.add_argument('-r', '--render', action='store_true', help='open render')
 parser.add_argument('-v', '--vision_touch', type=str, default='vision', help='vison model or touch model')
 parser.add_argument('-eval', '--evaluate_best', action='store_false', help="default to save the best model when training")
 parser.add_argument('-s', '--save_model', action='store_false', help="default to save the model when training in many steps")
-parser.add_argument('-n', '--normalize', action='store_true', help='normalize the observation space')
+parser.add_argument('-nor', '--normalize', action='store_true', help='normalize the observation space')
 parser.add_argument('-lr', '--learning_rate', type=float, default=0.0003, help='the learning_rate')
 parser.add_argument('-dl', '--dyn_learning_rate', action='store_false', help='make the learning rate has a linear schedule')
 parser.add_argument('-hs', '--hole_size', type=str, default="2cm", help="pick the hole size (2cm 1cm 4mm ...)")
@@ -39,18 +39,52 @@ parser.add_argument('-ms', '--match_shape', action='store_false', help="default 
 parser.add_argument('-real', '--realrobot', action='store_true', help='execte the model on the real robot')
 parser.add_argument('-dsl', '--d_s_l', action='store_true', help='execte the model with dynamic safety lock method')
 parser.add_argument('-dr', '--domain_randomization', action='store_true', help='execte the model with domain randomization')
+parser.add_argument('-g', '--ur_gen', type=int, default=5, help='the generation of URx (3/5/...)')
 
 args = parser.parse_args()
 
+policy_kwargs = dict(activation_fn=th.nn.Tanh,
+                     net_arch=dict(pi=[128, 128], vf=[128, 128]))
+
 root_dir_tensorboard = '/home/yi/project_ghent/tensorboard/'
 root_dir_model = '/home/yi/project_ghent/model/'
+
+if args.domain_randomization is True:
+    _dr = "_dr"
+else:
+    _dr = ""
+if args.normalize is True:
+    _nor = "_nor"
+else:
+    _nor = ""
+if args.d_s_l is True:
+    _dsl = "_dsl"
+else:
+    _dsl = ""
+if args.ur_gen == 5:
+    _ur_gen = "_g5"
+elif args.ur_gen == 3:
+    _ur_gen = "_g3"
+else:
+    _ur_gen = str(args.ur_gen)
+    print("chose the generation of UR, the default generation is 5.")
+if args.vision_touch == "vision":
+    _vision_touch = "vision"
+elif args.vision_touch == "vision-touch":
+    _vision_touch = "visiontouch"
+elif args.vision_touch == "touch":
+    _vision_touch = "touch"
+else:
+    _vision_touch = args.vision_touch
+    print("chose the env mode, the default mdoe is VISION.")
+saved_model_dir = args.model_dir + "_" + _vision_touch + _dsl + _dr + _nor + _ur_gen + "_"
 
 
 from typing import Callable
 
 
 running_time = datetime.now().strftime("%m%d%H%M%S")
-def linear_schedule(initial_value: float) -> Callable[[float], float]:
+def linear_schedule(initial_value: float, lowest_value: float = 0.000) -> Callable[[float], float]:
     """
     Linear learning rate schedule.
 
@@ -65,7 +99,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
         :param progress_remaining:
         :return: current learning rate
         """
-        return progress_remaining * initial_value
+        return progress_remaining * initial_value + lowest_value
 
     return func
 
@@ -80,15 +114,16 @@ for i in range(1):
                 normalizeObs=args.normalize,
                 hole_size=args.hole_size,
                 match_shape=args.match_shape,
-                dsl = args.d_s_l,
-                domain_randomization = args.domain_randomization,
+                dsl=args.d_s_l,
+                domain_randomization=args.domain_randomization,
+                ur_gen=args.ur_gen,
                 )
             # print("--------")
             eval_callback = EvalCallback(
                 eval_env,
-                best_model_save_path=root_dir_model+args.model_dir+running_time+'/',
-                log_path=root_dir_tensorboard+args.model_dir+running_time+'/',
-                eval_freq=100000,
+                best_model_save_path=root_dir_model+saved_model_dir+running_time+'/',
+                log_path=root_dir_tensorboard+saved_model_dir+running_time+'/',
+                eval_freq=20000,
                 deterministic=True,
                 render=False,
             )
@@ -96,8 +131,8 @@ for i in range(1):
         if args.save_model is True:
             checkpoint_callback = CheckpointCallback(
                 save_freq=200000,
-                save_path=root_dir_model+args.model_dir+running_time+'/',
-                name_prefix=args.model_dir+running_time,
+                save_path=root_dir_model+saved_model_dir+running_time+'/',
+                name_prefix=saved_model_dir+running_time,
                 save_replay_buffer=True,
                 save_vecnormalize=True,
             )
@@ -113,12 +148,12 @@ for i in range(1):
             callback = CallbackList([])
             print('the model would not be saved by any callback methods in training process.')
         if args.dyn_learning_rate is True:
-            _learning_rate = linear_schedule(args.learning_rate)
+            _learning_rate = linear_schedule(args.learning_rate, lowest_value=0.0001)
         else:
             _learning_rate = args.learning_rate
         
         _clip_range = linear_schedule(0.2)
-        
+
         env = gym.make(
             args.env,
             render=args.render,
@@ -128,8 +163,9 @@ for i in range(1):
             match_shape=args.match_shape,
             dsl = args.d_s_l,
             domain_randomization = args.domain_randomization,
+            ur_gen=args.ur_gen,
             )
-        log_dir = root_dir_tensorboard + args.model_dir + running_time
+        log_dir = root_dir_tensorboard + saved_model_dir + running_time
        
         if args.alg == 'TD3':
             print("using TD3 algorithm.")
@@ -142,19 +178,23 @@ for i in range(1):
                 learning_rate=_learning_rate,
                 tensorboard_log=log_dir)
             model.learn(total_timesteps=args.total_timesteps, callback=callback)
-            # model.save(root_dir_model + args.model_dir + running_time + ".pkl")
-            print("the model has saved:", root_dir_model + args.model_dir + running_time + ".pkl")
+            # model.save(root_dir_model + saved_model_dir + running_time + ".pkl")
+            print("the model has saved:", root_dir_model + saved_model_dir + running_time + ".pkl")
         elif args.alg == 'PPO':
             print("using PPO algorithm.")
             model = PPO(
                 policy="MlpPolicy", 
                 env=env, 
                 verbose=1,
-                ent_coef=0.01,
+                ent_coef=0.0011,
+                # clip_range_vf=0.5,
                 clip_range=_clip_range,
                 learning_rate=_learning_rate,
-                n_steps=4096,
-                batch_size=256,
+                n_steps=2048,
+                batch_size=64,
+                n_epochs=10,
+                policy_kwargs=policy_kwargs,
+                # target_kl=0.03,
                 tensorboard_log=log_dir)
             # model = RecurrentPPO(
             #     policy="MlpLstmPolicy", 
@@ -168,8 +208,8 @@ for i in range(1):
             #     tensorboard_log=log_dir)
             print("set up PPO model env")
             model.learn(total_timesteps=args.total_timesteps, callback=callback)
-            # model.save(root_dir_model + args.model_dir + running_time + ".pkl")
-            print("the model has saved:", root_dir_model + args.model_dir + running_time + ".pkl")
+            # model.save(root_dir_model + saved_model_dir + running_time + ".pkl")
+            print("the model has saved:", root_dir_model + saved_model_dir + running_time + ".pkl")
         elif args.alg == 'SAC':
             print("using SAC algorithm.")
             model = TD3(
@@ -181,8 +221,8 @@ for i in range(1):
                 learning_rate=_learning_rate,
                 tensorboard_log=log_dir)
             model.learn(total_timesteps=args.total_timesteps, callback=callback)
-            # model.save(root_dir_model + args.model_dir + running_time + ".pkl")
-            print("the model has saved:", root_dir_model + args.model_dir + running_time + ".pkl")
+            # model.save(root_dir_model + saved_model_dir + running_time + ".pkl")
+            print("the model has saved:", root_dir_model + saved_model_dir + running_time + ".pkl")
 
             # print("mdoel learning error, choose the right model algorithm.")
     elif args.learn is False and args.realrobot is False: # render in sim
@@ -194,7 +234,7 @@ for i in range(1):
             hole_size = args.hole_size,
             dsl = args.d_s_l,
             domain_randomization = args.domain_randomization,
-            render_mode="human",
+            ur_gen=args.ur_gen,
             )
 
         if args.alg == 'TD3':
@@ -213,7 +253,7 @@ for i in range(1):
         i = 0
         while i < 10:
             action, _state = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
+            obs, reward, done, _, info = env.step(action)
             obs_record = np.r_[obs_record, [obs]]
             if done:
                 # np.save("obs.npy", obs_record)
@@ -237,7 +277,7 @@ for i in range(1):
             real_robot = args.realrobot,
             dsl = args.d_s_l,
             domain_randomization = args.domain_randomization,
-            render_mode="human",
+            ur_gen=args.ur_gen,
             )
         if args.alg == 'TD3':
             # print(root_dir_model + args.model_dir + '.pkl')
@@ -253,7 +293,7 @@ for i in range(1):
         i = 0
         while i < 90:
             action, _state = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
+            obs, reward, done, _, info = env.step(action)
             obs_record = np.r_[obs_record, [obs]]
             i += 1
             # print(i)

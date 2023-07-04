@@ -1,0 +1,282 @@
+<mujoco>
+    <default>
+        <joint axis="0 1 0" range="-6.28319 6.28319" />
+        <position ctrlrange="-6.2831 6.2831" />
+
+        <default class="visual_tool">
+          <geom type="capsule" contype="0" conaffinity="0" size=".0025 .001" group="2" />
+        </default>
+        <default class="collision_tool">
+          <geom type="capsule" size=".0025 .001" group="3" />
+        </default>
+        <default class="tool_ball_joint">
+          <joint type="ball" range="0 6.28319" stiffness="0.0691208259071923" damping="0.007517692619584424" />
+        </default>
+
+
+        <default class="visual_arm">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" />
+        </default>
+        <default class="collision_arm">
+          <geom type="capsule" group="3" />
+          <default class="eef_collision">
+            <geom type="cylinder" />
+          </default>
+        </default>
+        <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4" />
+
+        <default class="size3">
+          <joint armature="0.1" damping="200" />
+          <position kp="4000" forcerange="-150 150" ctrllimited="true" />
+          <default class="size3_limited">
+            <joint range="-3.1415 3.1415" />
+            <position ctrlrange="-3.1415 3.1415" ctrllimited="true" />
+          </default>
+        </default>
+        <default class="size1">
+          <joint armature="0.1" damping="50" />
+          <position kp="3000" forcerange="-28 28" />
+        </default>
+
+        <default class="2f85">
+            <mesh scale="0.001 0.001 0.001" />
+            <general biastype="affine" />
+
+            <joint axis="1 0 0" />
+            <default class="driver">
+                <joint range="0 0.8" armature="0.005" damping="0.1" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" />
+            </default>
+            <default class="follower">
+                <joint range="-0.872664 0.872664" pos="0 -0.018 0.0065" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" />
+            </default>
+            <default class="spring_link">
+                <joint range="-0.29670597283 0.8" stiffness="0.05" springref="2.62" damping="0.00125" />
+            </default>
+            <default class="coupler">
+                <joint range="-1.57 0" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" />
+            </default>
+
+            <default class="visual">
+                <geom type="mesh" contype="0" conaffinity="0" group="2" />
+            </default>
+            <default class="collision">
+                <geom type="mesh" group="3" />
+                <default class="pad_box1">
+                <geom mass="0" type="box" pos="0 -0.0026 0.028125" size="0.011 0.004 0.009375" friction="0.7" solimp="0.95 0.99 0.001" solref="0.004 1" priority="1" rgba="0.55 0.55 0.55 1" />
+                </default>
+                <default class="pad_box2">
+                <geom mass="0" type="box" pos="0 -0.0026 0.009375" size="0.011 0.004 0.009375" friction="0.6" solimp="0.95 0.99 0.001" solref="0.004 1" priority="1" rgba="0.45 0.45 0.45 1" />
+                </default>
+            </default>
+        </default>
+    </default>
+    <asset>
+        <material name="black" specular="0.5" shininess="0.25" rgba="0.033 0.033 0.033 1" />
+        <material name="jointgray" specular="0.5" shininess="0.25" rgba="0.278 0.278 0.278 1" />
+        <material name="linkgray" specular="0.5" shininess="0.25" rgba="0.82 0.82 0.82 1" />
+        <material name="urblue" specular="0.5" shininess="0.25" rgba="0.49 0.678 0.8 1" />
+
+        <mesh name="base" file="base.stl" />
+        <mesh name="shoulder" file="shoulder.stl" />
+        <mesh name="upperarm" file="upperarm.stl" />
+        <mesh name="forearm" file="forearm.stl" />
+        <mesh name="wrist1" file="wrist1.stl" />
+        <mesh name="wrist2" file="wrist2.stl" />
+        <mesh name="wrist3" file="wrist3.stl" />
+
+        <mesh name="gripperconnector" file="kinova_robotiq_coupler.stl" />
+        <mesh name="gripperpalm" file="robotiq_85_base_link.stl" />
+        <mesh name="link_0" file="robotiq_85_finger_link.stl" />
+        <mesh name="link_1" file="robotiq_85_finger_tip_link.stl" />
+        <mesh name="link_2" file="robotiq_85_inner_knuckle_link.stl" />
+        <mesh name="link_3" file="robotiq_85_knuckle_link.stl" />
+
+        <mesh name="tubetool" file="cube_insertion_tool.stl" />
+
+        <mesh class="2f85" file="base_mount.stl" />
+        <mesh class="2f85" file="base2f85.stl" />
+        <mesh class="2f85" file="driver.stl" />
+        <mesh class="2f85" file="coupler.stl" />
+        <mesh class="2f85" file="follower.stl" />
+        <mesh class="2f85" file="pad.stl" />
+        <mesh class="2f85" file="silicone_pad.stl" />
+        <mesh class="2f85" file="spring_link.stl" />
+
+        <texture name="ur3_tex" type="2d" builtin="flat" height="32" width="32" rgb1="0.45 0.45 0.45" />
+        <texture name="bench_tex" type="2d" builtin="flat" height="32" width="32" rgb1="0.7 0.7 0.7" />
+
+        <material name="ur3_mat" texture="ur3_tex" shininess="0.9" specular="0.75" reflectance="0.3" />
+        <material name="bench_mat" texture="bench_tex" shininess="0.1" specular="0.5" reflectance="0.2" />
+        <material name="GriMat" specular="0.9" shininess="0.5" reflectance="0" rgba="0.1 0.1 0.1 1" emission="0.1" />
+
+        <material name="metal" rgba="0.58 0.58 0.58 1" />
+        <material name="silicone" rgba="0.1882 0.1882 0.1882 1" />
+        <material name="gray" rgba="0.4627 0.4627 0.4627 1" />
+    </asset>
+    <worldbody>
+        <body name="OUR_TABLE" pos="0 0 0.435">
+            <geom size=".08 .08 .035" pos="0 0 0.4" type="box" material="bench_mat" />
+            <geom size=".04 .04 .435" pos="0 0 0" type="box" material="bench_mat" />
+            <inertial pos="0 0 0" mass="1000" diaginertia="0 0 0" />
+            <body name="base_link" pos="0 0 0.435">
+                <inertial pos="0 0 0" mass="4" diaginertia="0.005625 0.00305317 0.00305317" />
+                <geom type="mesh" mesh="base" material="black" class="visual_arm" />
+                <body name="shoulder_link" pos="0 0 0.1530">
+                    <inertial pos="0 0 0" mass="3.7" diaginertia="0.00809316 0.00809316 0.005625" />
+                    <joint name="shoulder_pan_joint" class="size3" axis="0 0 1" />
+                    <geom type="mesh" mesh="shoulder" material="jointgray" class="visual_arm" />
+                    <body name="upper_arm_link" pos="0 0.1198 0" quat="0.707107 0 0.707107 0">
+                        <inertial pos="0 0 0.121825" mass="3.42" diaginertia="0.0217285 0.0217285 0.00961875" />
+                        <joint name="shoulder_lift_joint" class="size3" axis="0 1 0" />
+                        <geom type="mesh" mesh="upperarm" material="black" class="visual_arm" />
+                        <body name="forearm_link" pos="0 -0.0925 0.24365">
+                            <inertial pos="0 0 0.106625" mass="1.26" diaginertia="0.00654681 0.00654681 0.00354375" />
+                            <joint name="elbow_joint" class="size3_limited" axis="0 1 0" />
+                            <geom type="mesh" mesh="forearm" material="jointgray" class="visual_arm" />
+                            <body name="wrist_1_link" pos="0 0 0.21325" quat="0.707107 0 0.707107 0">
+                                <inertial pos="0 0 0" mass="0.8" diaginertia="0.00225 0.002085 0.002085" />
+                                <joint name="wrist_1_joint" class="size1" axis="0 1 0" />
+                                <geom type="mesh" mesh="wrist1" material="black" class="visual_arm" />
+                                <body name="wrist_2_link" pos="0 0.08505 0">
+                                    <inertial pos="0 0 0" mass="0.8" diaginertia="0.00225 0.002085 0.002085" />
+                                    <joint name="wrist_2_joint" class="size1" axis="0 0 1" />
+                                    <geom type="mesh" mesh="wrist2" material="jointgray" class="visual_arm" />
+                                    <body name="wrist_3_link" pos="0 0 0.08535">
+                                        <inertial pos="0 0 0" mass="0.35" diaginertia="0.000984375 0.000912187 0.000912187" />
+                                        <joint name="wrist_3_joint" class="size1" axis="0 1 0" />
+                                        <geom name="wrist_3_link" type="mesh" mesh="wrist3" material="black" class="visual_arm" />
+                                        <site name="attachment_site" pos="0 0.1 0" quat="1 1 0 0" />
+                                        <body name="base_mount" pos="0 0.1 -0.002" quat="0.707107 -0.707107 0 0" childclass="2f85">
+                                            <site name="ee_site" pos="0 0 0.06" size="0.005 0.005 0.005" type="sphere" rgba="0.3 0.2 0.1 1" />
+                                            <body name="cylinder_obj" pos="0 0 0.15">
+                                                <geom class="collision_tool" />
+                                                <geom class="visual_tool" rgba="1 0.5 0.5 1" />
+                                                <joint class="tool_ball_joint" />
+                                                <body name="cylinder_obj1" pos="0 0 0.005">
+                                                    <geom class="collision_tool" />
+                                                    <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                    <joint class="tool_ball_joint" />
+                                                    <body name="cylinder_obj2" pos="0 0 0.005">
+                                                        <geom class="collision_tool" />
+                                                        <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                        <joint class="tool_ball_joint" />
+                                                        <body name="cylinder_obj3" pos="0 0 0.005">
+                                                            <geom class="collision_tool" />
+                                                            <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                            <joint class="tool_ball_joint" />
+                                                            <body name="cylinder_obj4" pos="0 0 0.005">
+                                                                <geom class="collision_tool" />
+                                                                <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                <joint class="tool_ball_joint" />
+                                                                <body name="cylinder_obj5" pos="0 0 0.005">
+                                                                    <geom class="collision_tool" />
+                                                                    <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                    <joint class="tool_ball_joint" />
+                                                                    <body name="cylinder_obj6" pos="0 0 0.005">
+                                                                        <geom class="collision_tool" />
+                                                                        <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                        <joint class="tool_ball_joint" />
+                                                                        <body name="cylinder_obj7" pos="0 0 0.005">
+                                                                            <geom class="collision_tool" />
+                                                                            <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                            <joint class="tool_ball_joint" />
+                                                                            <body name="cylinder_obj8" pos="0 0 0.005">
+                                                                                <geom class="collision_tool" />
+                                                                                <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                <joint class="tool_ball_joint" />
+                                                                                <body name="cylinder_obj9" pos="0 0 0.005">
+                                                                                    <geom class="collision_tool" />
+                                                                                    <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                    <joint class="tool_ball_joint" />
+                                                                                    <body name="cylinder_obj10" pos="0 0 0.005">
+                                                                                        <geom class="collision_tool" />
+                                                                                        <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                        <joint class="tool_ball_joint" />
+                                                                                        <body name="cylinder_obj11" pos="0 0 0.005">
+                                                                                            <geom class="collision_tool" />
+                                                                                            <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                            <joint class="tool_ball_joint" />
+                                                                                            <body name="cylinder_obj12" pos="0 0 0.005">
+                                                                                                <geom class="collision_tool" />
+                                                                                                <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                                <joint class="tool_ball_joint" />
+                                                                                                <body name="cylinder_obj13" pos="0 0 0.005">
+                                                                                                    <geom class="collision_tool" />
+                                                                                                    <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                                    <joint class="tool_ball_joint" />
+                                                                                                    <body name="cylinder_obj14" pos="0 0 0.005">
+                                                                                                        <geom class="collision_tool" />
+                                                                                                        <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+                                                                                                        <joint class="tool_ball_joint" />
+                                                                                                        <body name="cylinder_obj15" pos="0 0 0.005">
+                                                                                                            <geom class="collision_tool" />
+                                                                                                            <geom class="visual_tool" rgba="0 0.5 0.5 1" />
+
+                                                                                                            <site name="obj_bottom" type="sphere" size=".001 .001 .001" pos="0 0 0" quat="1 0 0 0" />
+                                                                                                        </body>
+                                                                                                    </body>
+                                                                                                </body>
+                                                                                            </body>
+                                                                                        </body>
+                                                                                    </body>
+                                                                                </body>
+                                                                            </body>
+                                                                        </body>
+                                                                    </body>
+                                                                </body>
+                                                            </body>
+                                                        </body>
+                                                    </body>
+                                                </body>
+                                          </body>
+                                        </body>
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+
+    <contact>
+        <exclude body1="OUR_TABLE" body2="base_link" />
+        <exclude body1="base_link" body2="shoulder_link" />
+        <exclude body1="shoulder_link" body2="upper_arm_link" />
+        <exclude body1="upper_arm_link" body2="forearm_link" />
+        <exclude body1="forearm_link" body2="wrist_1_link" />
+        <exclude body1="wrist_1_link" body2="wrist_2_link" />
+        <exclude body1="wrist_2_link" body2="wrist_3_link" />
+
+        <exclude body1="cylinder_obj" body2="cylinder_obj1" />
+        <exclude body1="cylinder_obj1" body2="cylinder_obj2" />
+        <exclude body1="cylinder_obj3" body2="cylinder_obj2" />
+        <exclude body1="cylinder_obj3" body2="cylinder_obj4" />
+        <exclude body1="cylinder_obj5" body2="cylinder_obj4" />
+        <exclude body1="cylinder_obj5" body2="cylinder_obj6" />
+        <exclude body1="cylinder_obj7" body2="cylinder_obj6" />
+        <exclude body1="cylinder_obj7" body2="cylinder_obj8" />
+        <exclude body1="cylinder_obj9" body2="cylinder_obj8" />
+        <exclude body1="cylinder_obj10" body2="cylinder_obj10" />
+        <exclude body1="cylinder_obj11" body2="cylinder_obj10" />
+        <exclude body1="cylinder_obj11" body2="cylinder_obj12" />
+        <exclude body1="cylinder_obj13" body2="cylinder_obj12" />
+        <exclude body1="cylinder_obj13" body2="cylinder_obj14" />
+        <exclude body1="cylinder_obj15" body2="cylinder_obj14" />
+
+    </contact>
+
+    <actuator>
+        <position class="size3" name="shoulder_pan" joint="shoulder_pan_joint" />
+        <position class="size3" name="shoulder_lift" joint="shoulder_lift_joint" />
+        <position class="size3_limited" name="elbow" joint="elbow_joint" />
+        <position class="size1" name="wrist_1" joint="wrist_1_joint" />
+        <position class="size1" name="wrist_2" joint="wrist_2_joint" />
+        <position class="size1" name="wrist_3" joint="wrist_3_joint" />
+    </actuator>
+    <sensor>
+        <force name="ee_force_sensor" site="ee_site" />
+        <torque name="ee_torque_sensor" site="ee_site" />
+    </sensor>
+</mujoco>

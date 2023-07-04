@@ -10,6 +10,21 @@ import pyzed.sl as sl
 
 import rtde_receive
 
+
+# urdf ik fk test ------------
+import gym_envs.envs.ur3_kdl as urkdl
+urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper_real.urdf"
+urxkdl = urkdl.URx_kdl(urDH_file)
+target1joint = np.array([-2.9200850168811243, -1.4415864211371918, -2.041741371154785, 5.058547007828512, 1.6527293920516968, 0.25450488924980164])
+ee_pos = urxkdl.forward(qpos=target1joint)
+print("forward ee pos:", ee_pos)
+target_orientation = np.array([ 0.0, 0.0, 0.0, -1.0])
+qpos = urxkdl.inverse(target1joint, ee_pos, target_orientation)
+print("ik qpos:", qpos)
+# -----------------------------
+
+
+
 class AprilTag:
     def __init__(self) -> None:
         # ----------- ZED initial ------------
@@ -268,6 +283,26 @@ class AprilTag:
         vel = 0.3
         acc = 0.3
         #TODO: calculate distance between the tag biside robot and the hole tag to calibrate the robot with tag
+        # real
+        # robot
+        # qpos: [-2.9201114813434046, -1.4415806394866486, -2.041717529296875, 5.058514135866918, 1.652726411819458,
+        #        0.2544717788696289]
+        # urdf
+        # end - effector
+        # quaternion: (0.02320224039465548, 0.033820825983002754, -0.7180085952807269, 0.6948247727833928)
+        # forward
+        # ee
+        # pos: [0.43251274 - 0.0315637   0.35386795]
+        # tag
+        # dis: [-0.43442919  0.02389648  0.03497954]
+        # ik
+        # qpos: [-3.5096184    1.6306407 - 8.4380692 - 1.04655313   1.57079633
+        #        - 10.62754854]
+        # real
+        # robot
+        # ee
+        # pos: [-0.43098563341116186, 0.01821768860267594, 0.1741339502699132]
+        # problem1: the kdl-fk and real robot ee pos are diff
         ## init arm ------------
         target1joint = np.array([-2.9200850168811243, -1.4415864211371918, -2.041741371154785, 5.058547007828512, 1.6527293920516968, 0.25450488924980164])
         ee_pos = urxkdl.forward(qpos=target1joint)
@@ -360,7 +395,7 @@ class AprilTag:
 cam = AprilTag()
 # cam.tag_dis()
 # cam.stereo_calibration_chessboard()
-cam.tag_robot_calibration()
+# cam.tag_robot_calibration()
 # filename = "/home/yi/apriltag_source/tag36h11_6.png"
 
 # img = cv2.imread(filename)

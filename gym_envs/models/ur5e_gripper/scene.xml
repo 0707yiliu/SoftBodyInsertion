@@ -8,7 +8,7 @@
   <option>
     <flag gravity="disable"/>
   </option>
-  <option timestep="0.001" jacobian="sparse" impratio="10" tolerance="1e-10"/>
+  <option timestep="0.01" jacobian="sparse" impratio="10" tolerance="1e-10"/>
   <statistic center="0.3 0 0.4" extent="0.8"/>
 
   <visual>

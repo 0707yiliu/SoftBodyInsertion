@@ -78,16 +78,28 @@ class Mujoco_Func:
         hole_size: str = "4mm",
         real_robot: bool = False,
         domain_randomization: bool = False,
+        ur_gen: int = 3,
     ) -> None:
         if real_robot is True:
-            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper_real.urdf"
+            if ur_gen == 5:
+                urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper_real.urdf"
+            elif ur_gen == 3:
+                urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur3_robot_real.urdf"
         else:
-            urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
+            if ur_gen == 5:
+                urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur5e_gripper/ur5e_gripper.urdf"
+            elif ur_gen == 3:
+                urDH_file = "/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/gym_envs/models/ur3_robot.urdf"
         self.urxkdl = urkdl.URx_kdl(urDH_file)
-        if vision_touch == 'vision':
+        # for mujoco
+        if ur_gen == 5:
             xml_file = 'ur5e_gripper/scene.xml'
-        elif vision_touch == 'vision-touch' or vision_touch == 'touch':
-            xml_file = 'ur5e_gripper/scene.xml'
+        elif ur_gen == 3:
+            xml_file = 'ur3_pih_curved.xml'
+        # if vision_touch == 'vision':
+        #     xml_file = 'ur5e_gripper/scene.xml'
+        # elif vision_touch == 'vision-touch' or vision_touch == 'touch':
+        #     xml_file = 'ur5e_gripper/scene.xml'
         
         self.xml_file = file_root + xml_file
         self.model = mujoco.MjModel.from_xml_path(self.xml_file)
@@ -99,18 +111,23 @@ class Mujoco_Func:
 
         self.domain_randomization = domain_randomization
         self.file_root = file_root
-        self.tool_stiffness_range = np.array([0.05, 1])
-        self.tool_damper_range = np.array([0.008, 0.1])
+        self.tool_stiffness_range = np.array([0.01, 0.1])
+        self.tool_damper_range = np.array([0.005, 0.05])
 
-        self.n_substeps = 1
+        self.n_substeps = 10
         self.timestep = 0.001
+
+        self.ur_gen = ur_gen
 
     def reload_xml(self):
         try:
             import xml.etree.cElementTree as ET
         except ImportError:
             import xml.etree.ElementTree as ET
-        tool_xml = self.file_root + 'ur5e_gripper/ur5e_with_gripper_softTool.xml'
+        if self.ur_gen == 5:
+            tool_xml = self.file_root + 'ur5e_gripper/ur5e_with_gripper_softTool.xml'
+        elif self.ur_gen == 3:
+            tool_xml = self.file_root + 'ur3_with_grippersoftTool.xml'
         tree = ET.parse(tool_xml)
         root = tree.getroot()
         # domain randomization for tool's stiffness and damper
@@ -125,7 +142,10 @@ class Mujoco_Func:
                 student.set("damping", tool_damper)
                 # student.attrib["stiffness"] = 0.08
                 # print(student.attrib)
-        tree.write(self.file_root+'ur5e_gripper/ur5e_with_gripper_softTool.xml')
+        if self.ur_gen == 3:
+            tree.write(self.file_root+'ur3_with_grippersoftTool.xml')
+        elif self.ur_gen == 5:
+            tree.write(self.file_root + 'ur5e_gripper/ur5e_with_gripper_softTool.xml')
         time.sleep(0.01) # waiting file writing
         self.model = mujoco.MjModel.from_xml_path(self.xml_file)
         self.data = mujoco.MjData(self.model)
@@ -208,13 +228,15 @@ class Mujoco_Func:
 
     @contextmanager
     def no_rendering(self) -> Iterator[None]:
-        pass
+        pass#
 
+#
 # test_env = Mujoco_Func()
 #
 # i = 0
 # # fw_qpos = np.array([1.53, -1.53, 1.53, -1.53, -1.53, -1.57079633])
-# fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0])
+# # fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0])
+# fw_qpos = np.array([0.78781694, -1.42926988,  1.16459104, -1.30611748, -1.57079633, -0.78297938])
 # joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
 #               'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
 # current_arm_joint = np.zeros(6)
@@ -223,12 +245,13 @@ class Mujoco_Func:
 # while i < 5000:
 #     i += 1
 #     test_env.step()
-#     test_env.control_joints([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0.])
+#     test_env.control_joints(fw_qpos)
 #     for j in range(6):
 #         current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
 #     r = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3))
 #     # r = test_env.get_body_quaternion("wrist_3_link")
 #     site_pos = test_env.get_site_position("attachment_site")
+#     print("---------------")
 #     print("site pos:", site_pos)
 #     print("sim qua:", r.as_quat())
 #     # print("ft data:", test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
@@ -236,10 +259,13 @@ class Mujoco_Func:
 #     print("fw:", test_env.forward_kinematics(fw_qpos))
 #     current_ee_rot = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=True)
 #     print(current_ee_rot)
-#     print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, test_env.get_site_position('attachment_site'), r.as_quat()))
+#     print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, np.array([0.15, 0.31, 1.22]), np.array([0, 0, 0, 1])))
 #     # print(test_env.inverse_kinematics(current_arm_joint, [0.075, 0.575, 0.9], r.as_quat()))
-#     if i > 3000:
+#     current_ft = np.copy(test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
+#     print("ft sensor data:", current_ft)
+#     if i > 2000:
 #         test_env.reset()
 #         test_env.set_joint_angles(fw_qpos)
 #         i = 0
+#
 

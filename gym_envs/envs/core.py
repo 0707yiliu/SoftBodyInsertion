@@ -141,7 +141,8 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         task: Task,
         init_grasping: bool,
         render: bool,
-        num_goal: int = 25,
+        num_goal: int = 1,
+        ur_gen: int = 5,
         ) -> None:
         assert robot.sim == task.sim, "The robot and the task must belong to the same simulation."
         self.num_goal = num_goal
@@ -152,6 +153,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         self.init_grasping = init_grasping
         self.render = render
         # self._reset_first = False
+        self.one_episode = 0
         obs = self._get_obs()  # required for init; seed can be changed later
         # self._reset_first = True
         # observation_shape = obs["observation"].shape
@@ -170,7 +172,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         # print("observation shape:", observation_shape)
         # print(self.obs_record)
         # print(observation_shape)
-        self.observation_space  = spaces.Box(-10, 10.0, shape=observation_shape, dtype=np.float32)
+        self.observation_space = spaces.Box(-1, 1.0, shape=observation_shape, dtype=np.float32)
         print("obs space:",self.observation_space)
         self.action_space = self.robot.action_space
 
@@ -179,11 +181,13 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         # self._saved_goal = dict()
         # print("over here")
 
+
     def reset(self, seed: Optional[int] = None, options={}) -> tuple:
         # self.task.np_random, seed = gym.utils.seeding.np_random(seed)
         # with self.sim.no_rendering():
         #     self.robot.reset()
         #     self.task.reset()
+        self.one_episode = 0
         self.robot.reset()
         self.task.reset()
         self.sim.set_forward() # update env statement
@@ -242,11 +246,13 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         #     else:
         #         self._num_goal = 0
         #         done = False
+        self.one_episode += 1
+        # print(self.one_episode)
         if self.render is False:
             if self.task.is_success(self.task.get_achieved_goal(), self.task.get_goal()):
                 self._num_goal += 1
                 if self._num_goal >= self.num_goal:
-                    done = True
+                    done = False
                     self._num_goal = 0
                 else:
                     done = False
@@ -257,7 +263,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
             if self.task.is_success(self.task.get_achieved_goal(), self.task.get_goal()):
                 self._num_goal += 1
                 if self._num_goal >= self.num_goal:
-                    done = False
+                    done = True
                     print("success")
                     self._num_goal = 0
                 else:
@@ -265,6 +271,8 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
             else:
                 self._num_goal = 0
                 done = False
-        truncated=False
+            if self.one_episode >= 400:
+                done = True
+        truncated = False
         return obs, reward, done, truncated, info
     

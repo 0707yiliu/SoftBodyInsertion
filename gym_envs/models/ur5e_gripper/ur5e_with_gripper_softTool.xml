@@ -2,7 +2,7 @@
   <default>
     <joint axis="0 1 0" range="-6.28319 6.28319" />
     <position ctrlrange="-6.2831 6.2831" />
-    
+
     <default class="visual_tool">
       <geom type="capsule" contype="0" conaffinity="0" size=".0025 .001" group="2" />
     </default>
@@ -10,9 +10,9 @@
       <geom type="capsule" size=".0025 .001" group="3" />
     </default>
     <default class="tool_ball_joint">
-      <joint type="ball" range="0 6.28319" stiffness="0.1610809834228603" damping="0.018688155476703796" />
+      <joint type="ball" range="0 6.28319" stiffness="0.052029349410862" damping="0.006233795838476998" />
     </default>
-    
+
 
     <default class="visual_arm">
       <geom type="mesh" contype="0" conaffinity="0" group="2" />
@@ -25,10 +25,10 @@
     </default>
     <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4" />
 
-    
+
     <default class="size3">
-      <joint armature="0.1" damping="300" />
-      <position kp="3500" forcerange="-150 150" ctrllimited="true" />
+      <joint armature="0.1" damping="150" />
+      <position kp="5500" forcerange="-150 150" ctrllimited="true" />
       <default class="size3_limited">
         <joint range="-3.1415 3.1415" />
         <position ctrlrange="-3.1415 3.1415" ctrllimited="true" />
@@ -36,7 +36,7 @@
     </default>
     <default class="size1">
       <joint armature="0.1" damping="15" />
-      <position kp="3000" forcerange="-28 28" />
+      <position kp="5000" forcerange="-28 28" />
     </default>
 
     <default class="2f85">
@@ -187,6 +187,7 @@
                                     <geom class="collision_tool" />
                                     <geom class="visual_tool" rgba="0 0.5 0.5 1" />
                                     <joint class="tool_ball_joint" />
+                                    <site name="obj_top" type="sphere" size=".001 .001 .001" pos="0 0 0" quat="1 0 0 0" />
                                     <body name="cylinder_obj2" pos="0 0 0.005">
                                         <geom class="collision_tool" />
                                         <geom class="visual_tool" rgba="0 0.5 0.5 1" />

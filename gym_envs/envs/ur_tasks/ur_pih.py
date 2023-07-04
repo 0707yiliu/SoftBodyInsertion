@@ -7,7 +7,7 @@
 import numpy as np
 
 from gym_envs.envs.core import RobotTaskEnv
-from gym_envs.envs.robots.ur5 import UR
+from gym_envs.envs.robots.urx import UR
 from gym_envs.envs.tasks.pih import PeginHole
 from gym_envs.mujoco_func2 import Mujoco_Func
 # from gym_envs.envs.apriltagDetection import AprilTag
@@ -25,6 +25,7 @@ class URPeginHoleEnv(RobotTaskEnv):
         real_robot: bool = False,
         dsl: bool = False,
         domain_randomization: bool = False,
+        ur_gen: int = 5,
         ) -> None:
         # print("--------")
         sim = Mujoco_Func(
@@ -33,6 +34,7 @@ class URPeginHoleEnv(RobotTaskEnv):
             hole_size=hole_size,
             real_robot=real_robot,
             domain_randomization=domain_randomization,
+            ur_gen=ur_gen,
             )
         robot = UR(
             sim=sim,
@@ -44,6 +46,7 @@ class URPeginHoleEnv(RobotTaskEnv):
             match_shape=match_shape,
             real_robot=real_robot,
             dsl=dsl,
+            ur_gen=ur_gen,
             )
         task = PeginHole(
             sim=sim,
@@ -52,11 +55,13 @@ class URPeginHoleEnv(RobotTaskEnv):
             vision_touch=vision_touch,
             _normalize=normalizeObs,
             real_robot=real_robot,
+            ur_gen=ur_gen,
             )
         super().__init__(
             robot, 
             task,
             init_grasping=True,
             render=render,
+            ur_gen=ur_gen,
             )
 

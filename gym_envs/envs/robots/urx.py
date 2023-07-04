@@ -1,0 +1,517 @@
+# MODEL: Universal Robots UR3 + Robotiq 2F-85 env
+# AUTHOR: Yi Liu @AiRO 04/10/2022
+# UNIVERSITY: UGent-imec
+# DEPARTMENT: Faculty of Engineering and Architecture
+# Control Engineering / Automation Engineering
+
+from array import array
+from email.mime import base
+from typing import Optional
+
+import numpy as np
+import math
+
+from gym import spaces
+from gym_envs.envs.core import MujocoRobot
+# import mujoco_py as mj
+# from gym_envs.mujoco_func import Mujoco_Func
+from gym_envs.utils import distance, normalizeVector, euler_to_quaternion
+from gym_envs.envs.impedance_controller import FT_controller
+import time
+from datetime import datetime
+
+from ctypes import util
+import signal
+import socket
+import serial
+import struct
+import sys
+import time
+import numpy as np
+import copy
+import argparse
+import threading
+import os
+from scipy.spatial.transform import Rotation as R
+import rtde_control
+import rtde_receive
+import math
+import gym_envs.envs.robots.robotiq_gripper as robotiq_gripper
+
+class UR(MujocoRobot):
+    def __init__(
+        self,
+        sim,
+        block_gripper: bool = False,
+        base_position: Optional[np.array] = None,
+        control_type: str = "ee",
+        d2r: float = math.pi/180,
+        planner_time: float = 1, # planner used time: union(s)
+        ee_positon_low: Optional[np.array] = None,
+        ee_positon_high: Optional[np.array] = None,
+        gripper_joint_low: Optional[float] = None,
+        gripper_joint_high: Optional[float] = None,
+        ee_dis_ratio: float = 0.006,
+        ee_rotxy_ratio: float = 0.015,
+        ee_rotz_ratio: float = 0.1,
+        joint_dis_ratio: float = 0.003,
+        gripper_action_ratio: float = 0.001,
+        gripper_max_joint: float = 0.67,
+        vision_touch: str = "vision",
+        _normalize: bool = False,
+        ee_init: Optional[np.array] = np.array([-0.3, 0.31, 0.89]),
+        z_offset: float = 0.16,
+        match_shape: bool = True,
+        real_robot: bool = False,
+        admittance_control: bool = True,
+        dsl: bool = False,
+        ee_rot_enable: bool = True,
+        ur_gen: int = 5,
+    ) -> None:
+        self.sim_ft_threshold = 50
+        self.admittance_control = admittance_control
+        self.real_robot = real_robot
+        self.z_press = False
+        self._init = False
+        self.dsl = dsl
+        self.matching_shape = match_shape # add z-axis rotation
+        self.ee_init_pos = ee_init
+        self.ee_init_pos[2] += z_offset
+        self.init_ft_sensor = np.array([0.34328045,  2.12207036, -9.31005002,  0.27880092,  0.04346038,  0.01519237])
+        self.ft_sensor_z = 0.0
+        # self.ee_pos = ee_init
+        # self.ee_pos[2] += z_offset
+        self._normalize_obs = _normalize
+        self.gripper_max_joint = gripper_max_joint
+        self.vision_touch = vision_touch
+        self.ee_rotxy_ratio = ee_rotxy_ratio
+        self.ee_rotz_ratio = ee_rotz_ratio
+        # if ur_gen == 5:
+        #     self.ee_dis_ratio = ee_dis_ratio / 10 # sim time = 0.001s, so the ee maximum movement is ee_dis_ratio(/m) between 1s.
+        # elif ur_gen == 3:
+        #     self.ee_dis_ratio = ee_dis_ratio / 20
+        self.ee_dis_ratio = ee_dis_ratio / 10
+        self.gripper_action_ratio = gripper_action_ratio/40 if self.vision_touch =='vision' else gripper_action_ratio/20
+        self.random_high = 0.045 if self.vision_touch == 'vision' else 0.045
+        self.random_low = -0.045 if self.vision_touch == 'vision' else -0.045 # 0.014
+        self.random_lim_high = 0.025 if self.vision_touch == 'vision' else 0.025
+        self.random_lim_low = -0.025 if self.vision_touch == 'vision' else -0.025
+        self._z_up = 0.01
+        self._z_down = 0.002
+        self.ft_last = np.array([0, 0, 0, 0, 0, 0])
+        self.ft_last_obs = np.array([0, 0, 0, 0, 0, 0])
+        self.low_filter_gain = 0.8
+        # self._z_up = 0
+        # self.random_high = 0.014 if self.vision_touch == 'vision' else 0.014
+        # self.random_low = -0.014 if self.vision_touch == 'vision' else -0.014
+        # self.random_lim_high = 0.004 if self.vision_touch == 'vision' else 0.004
+        # self.random_lim_low = -0.004 if self.vision_touch == 'vision' else -0.004
+        self.joint_dis_ratio = joint_dis_ratio
+        # normalization part
+        if ur_gen == 5:
+            self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.1, 0.4, 0.845])
+            self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.3, 0.7, 1.23])
+            self.ee_rot_low = np.array([-10, -10, -180])
+            self.ee_rot_high = np.array([10, 10, 180])
+            ft_xyz = 2
+            ft_rxyz = 0.5
+            self.ft_sensor_high = np.array([ft_xyz, ft_xyz, ft_xyz, ft_rxyz, ft_rxyz, ft_rxyz])
+            self.ft_sensor_low = np.array([-ft_xyz, -ft_xyz, -ft_xyz, -ft_rxyz, -ft_rxyz, -ft_rxyz])
+        elif ur_gen == 3:
+            ft_xyz = 0.6
+            ft_rxyz = 0.1
+            self.ft_sensor_high = np.array([ft_xyz, ft_xyz, ft_xyz, ft_rxyz, ft_rxyz, ft_rxyz])
+            self.ft_sensor_low = np.array([-ft_xyz, -ft_xyz, -ft_xyz, -ft_rxyz, -ft_rxyz, -ft_rxyz])
+            self.ee_rot_low = np.array([-10, -10, -180])
+            self.ee_rot_high = np.array([10, 10, 180])
+            self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.1, 0.2, 0.845])
+            self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.3, 0.5, 1.23])
+        self.gripper_joint_low = gripper_joint_low if gripper_joint_low is not None else 0.3
+        self.gripper_joint_high = gripper_joint_high if gripper_joint_high is not None else 0.47
+        base_position = base_position if base_position is not None else np.zeros(3)
+        self.block_gripper = block_gripper
+        self.planner_time = planner_time
+        self.control_type = control_type
+        n_action = 3 if self.control_type == "ee" else 6 # ur-ee control (x,y) / ur-joint control 
+        # n_action += 0 if self.block_gripper else 1 # replace by self.vision_touch
+        n_action += 3 if ee_rot_enable is True else 0
+        action_space = spaces.Box(-1.0, 1.0, shape=(n_action,), dtype=np.float32)
+        print("action space:", action_space)
+        norm_max = 1
+        norm_min = -1
+        # ee pos norm params --------
+        self.ee_pos_scale = self.ee_position_high - self.ee_position_low
+        self.ee_pos_norm_scale = (norm_max - norm_min) / self.ee_pos_scale
+        self.ee_pos_mean = (self.ee_position_high + self.ee_position_low) / 2
+        self.ee_pos_norm_mean = (norm_max + norm_min) / 2 * np.array([1, 1, 1])
+        # ee rot norm params --------
+        self.ee_rot_scale = self.ee_rot_high - self.ee_rot_low
+        self.ee_rot_norm_scale = (norm_max - norm_min) / self.ee_rot_scale
+        self.ee_rot_mean = (self.ee_rot_high + self.ee_rot_low) / 2
+        self.ee_rot_norm_mean = (norm_max + norm_min) / 2 * np.array([1, 1, 1])
+        # F/T sensor norm params ---------
+
+        self.ft_scale = self.ft_sensor_high - self.ft_sensor_low
+        self.ft_norm_scale = (norm_max - norm_min) / self.ft_scale
+        self.ft_mean = (self.ft_sensor_high + self.ft_sensor_low) / 2
+        self.ft_norm_mean = (norm_max + norm_min) / 2 * np.array([1, 1, 1, 1, 1, 1])
+        # ------------ for real robot ------------------
+        j_acc = 0.03
+        j_vel = 0.015
+        HOST = "10.42.0.162"
+        if self.real_robot is True:
+            self._reset = False
+            self.z_press_to_hole = False
+            
+            self.rtde_r = rtde_receive.RTDEReceiveInterface(HOST)
+            self.rtde_c = rtde_control.RTDEControlInterface(HOST)
+            actual_q = np.array(self.rtde_r.getActualQ())
+            print("current qpos:", actual_q)
+            self.j_init = np.array([1.31423293, -1.55386663,  1.32749743, -1.34477619, -1.57079633, -0.10715635]) 
+            print("init qpos:", self.j_init)
+            self.vel = 0.3
+            self.acc = 0.3
+            self.z_rot_offset = 0
+            # gripper setting-----------
+            print("Creating gripper...")
+            self.gripper = robotiq_gripper.RobotiqGripper()
+            print("Connecting to gripper...")
+            self.gripper.connect(HOST, 63352)
+            print("Activating gripper...")
+            self.gripper.activate()
+            self.ft_threashold = 10
+            self.z_up_offset = 0.002
+            self.z_down_offset = 0.003
+            self._init_xy = np.array([-0.05, 0.32])
+            _items = 500
+            ft_record = np.zeros((_items, 6))
+            for i in range(_items):
+                ft_record[i] = self.rtde_r.getActualTCPForce()
+                time.sleep(0.01)
+            self.real_init_ft_sensor = np.mean(ft_record, axis=0)
+
+        super().__init__(
+            sim,
+            action_space=action_space,
+            joint_index=np.array([0, 1, 2, 3, 4, 5, 6]),
+            joint_forces=np.array([87.0, 87.0, 87.0, 87.0, 12.0, 120.0, 170.0]),
+            joint_list=["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"],
+            sensor_list=["touchsensor_r1", "touchsensor_r2", "touchsensor_r3", "touchsensor_r4", "touchsensor_r5", "touchsensor_r6", 
+                        "touchsensor_l1", "touchsensor_l2", "touchsensor_l3", "touchsensor_l4", "touchsensor_l5", "touchsensor_l6"],
+        )
+        #!TODO: to be uniformed --------------
+        self.d2r = d2r
+        self.sensor_num = len(self.sensor_list)
+        self.fingers_index = np.array([6])
+        # self.neutral_joint_values = np.array((90, -90, 90, -90, -90, 0, 0))*d2r
+        if ur_gen == 5:
+            self.ft_threashold_xyz = 0.001
+            self.ft_threashold_rxyz = 0.001
+            self.neutral_joint_values = np.array([1.02992762, -1.44296501,  1.84817859, -1.97600992, -1.57079634, -0.5408687])
+            # self.neutral_joint_values = np.array([1.19274333, -1.44175816, 1.74942402, -1.82642832, -1.54568981, 0])
+            # self.neutral_joint_values = np.array([1.19274333, -1.84175816, 2.34942402, -2.02642832, -1.54568981, 0])
+        elif ur_gen == 3:
+            self.ft_threashold_xyz = 0.00001
+            self.ft_threashold_rxyz = 0.00001
+            # self.neutral_joint_values = np.array([0.83094203, -1.30108324, 1.05714794, -1.38607852, -1.52985284,  0])
+            # self.neutral_joint_values = np.array([0.83094203, -1.80108324, 1.55714794, -1.38607852, -1.52985284,  0])
+            # self.neutral_joint_values = np.array([1.19094203, -1.30108324, 1.05714794, -1.38607852, -1.52985284,  0])0.86640135, -1.28055101 , 1.07492697, -1.36517228 ,-1.57079633 ,-0.70439498
+            self.neutral_joint_values = np.array([0.78781694, -1.42926988,  1.16459104, -1.30611748, -1.57079633, -0.78297938])
+        self.ee_body = "eef"
+        self.finger1 = "right_driver_1"
+        self.finger2 = "left_driver_1"
+        if self.matching_shape is True:
+            self.init_z_rot = 0.0
+            self.z_rot_high = 160.0
+            self.z_rot_low = -160.0
+            # print(n_action)
+        #! -----------------------------------
+    def log_info(self):
+        print(f"Pos: {str(self.gripper.get_current_position()): >3}  "
+            f"Open: {self.gripper.is_open(): <2}  "
+            f"Closed: {self.gripper.is_closed(): <2}  ")
+
+    def set_action(self, action: np.ndarray) -> None:
+        action = action.copy()
+        # print(action)
+        action = np.clip(action, self.action_space.low, self.action_space.high)
+        if self.real_robot is False:
+            # ----------- ee / joint controlling type -------------
+            if self.control_type == "ee":
+                ee_displacement = np.copy(action) # 3-xyz + 3-rot = 6-dof
+                # print(ee_displacement)
+                target_arm_angles = self.ee_displacement_to_target_arm_angles(ee_displacement)
+                current_joint_arm = np.array([self.get_joint_angle(joint=self.joint_list[i]) for i in range(6)])
+                if np.isnan(target_arm_angles).any() is True or np.isfinite(target_arm_angles).all() is False:
+                    target_arm_angles = np.copy(current_joint_arm)
+                # elif (np.absolute(target_arm_angles - current_joint_arm) > 0.5).any():
+                #     target_arm_angles = np.copy(current_joint_arm)
+            else:
+                arm_joint_ctrl = action[:7] # 6 arm joints + 1 gripper joints
+                target_arm_angles = self.arm_joint_ctrl_to_target_arm_angles(arm_joint_ctrl)
+            # ---------------------------------------------------------
+            current_joint_arm = np.array([self.get_joint_angle(joint=self.joint_list[i]) for i in range(6)])
+            current_joint_gripper = np.array(self.get_fingers_width()/2)
+            # current_joint_gripper = np.clip(current_joint_gripper, self.gripper_joint_low, self.gripper_joint_high)
+            current_joint = np.concatenate((current_joint_arm, [current_joint_gripper]))
+            self.joint_planner(grasping=False, _time=self.planner_time/50, 
+                                current_joint=current_joint_arm,
+                                target_joint=target_arm_angles)
+        else: # for real robot
+            ee_displacement = np.copy(action)
+            target_arm_angles = self.ee_displacement_to_target_arm_angles(ee_displacement)
+
+            current_joint_arm = np.array(self.rtde_r.getActualQ())
+            self.real_joint_planner(grasping=True,
+                                    _time=self.planner_time/50, 
+                                    current_joint=current_joint_arm, 
+                                    target_joint=target_arm_angles)
+            time.sleep(0.1)
+            if self._init is True:
+                time.sleep(0.1)
+
+    def ee_displacement_to_target_arm_angles(self, ee_displacement: np.ndarray) -> np.ndarray:
+        xyz = 3
+        self.low_filter_gain = 0.8
+        if self.real_robot is False:
+            if self.dsl is True: # Dyn safety lock for EEF-XYZ-RPY
+                dis_ratio_d = np.array([0.0015, 0.0015, 0.0035]) # for ur5
+                # dis_ratio_d = np.array([0.0003, 0.0003, 0.0005]) # for ur3 testing
+                dis_ratio_r = 0.05
+                current_ft = np.copy(self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
+                # print("current ft:", current_ft)
+                for ft_xyz in range(3):
+                    current_ft[ft_xyz] = 0 if self.ft_threashold_xyz > current_ft[ft_xyz] > -self.ft_threashold_xyz else current_ft[ft_xyz]
+                    current_ft[ft_xyz+3] = 0 if self.ft_threashold_rxyz > current_ft[ft_xyz + 3] > -self.ft_threashold_rxyz else current_ft[ft_xyz + 3]
+                # print("current ft threashold:", current_ft)
+                current_ft = (current_ft - self.ft_mean) * self.ft_norm_scale + self.ft_norm_mean
+                current_ft = self.ft_last * self.low_filter_gain + current_ft * (1 - self.low_filter_gain) # low-pass filter for F/T sensor
+                # print("current ft norm and filted:", current_ft)
+                self.ft_last = np.copy(current_ft)
+                ee_dis_x = -math.tanh(3 * current_ft[0])
+                ee_dis_y = -math.tanh(3 * current_ft[1])
+                ee_dis_z = math.tanh(3 * current_ft[2])
+                ee_dis_rx = math.tanh(100 * current_ft[3])
+                ee_dis_ry = math.tanh(100 * current_ft[4])
+                ee_dis_rz = math.tanh(100 * current_ft[5])
+                dsl_ee_dis = np.array([ee_dis_x, ee_dis_y, ee_dis_z, ee_dis_rx, ee_dis_ry, ee_dis_rz])
+                # print("dsl dis z:", ee_dis_z)
+                # print("dsl dis:", dsl_ee_dis)
+                # print("---------")
+                ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio + dsl_ee_dis[:xyz] * dis_ratio_d
+                ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio + dsl_ee_dis[xyz:-1] * dis_ratio_r
+                ee_displacement[-1] = ee_displacement[-1] * self.ee_rotz_ratio + dsl_ee_dis[-1] * dis_ratio_r
+            else:
+                ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio
+                ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio
+                ee_displacement[-1] = ee_displacement[-1] * self.ee_rotz_ratio
+            # print(ee_displacement)
+            # target_ee_position = np.clip(ee_displacement[:xyz], self.ee_position_low, self.ee_position_high)
+            current_joint = np.array([self.get_joint_angle(joint=self.joint_list[i]) for i in range(6)])
+            current_ee_pos = self.sim.get_site_position('attachment_site')
+            current_ee_rot = R.from_matrix(self.sim.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=True)
+            target_ee_pos = current_ee_pos + ee_displacement[:xyz]
+            target_ee_rot = current_ee_rot + ee_displacement[xyz:]
+            # print("target_ee_rot:", target_ee_rot)
+            target_ee_rot = np.clip(target_ee_rot, self.ee_rot_low, self.ee_rot_high)
+            # print(current_ee_rot)
+            target_ee_pos = np.clip(target_ee_pos, self.ee_position_low, self.ee_position_high)
+            target_ee_quat = R.from_euler('xyz', target_ee_rot, degrees=True).as_quat()
+            target_arm_angles = self.inverse_kinematics(
+                    current_joint=current_joint, 
+                    target_position=target_ee_pos, 
+                    target_orientation=target_ee_quat
+                )
+            # print(target_arm_angles)
+            return target_arm_angles
+        else: # for real robot
+            if self.dsl is True:
+                dis_ratio_d = 0.05
+                dis_ratio_r = 1
+                current_ft = np.array(self.rtde_r.getActualTCPForce())
+
+                ee_dis_x = -math.tanh(current_ft[0]/10)
+                ee_dis_y = math.tanh(current_ft[1]/10)
+                ee_dis_z = -math.tanh(current_ft[2]/10)
+                ee_dis_rx = -math.tanh(10 * current_ft[3])
+                ee_dis_ry = math.tanh(10 * current_ft[4])
+                ee_dis_rz = -math.tanh(10 * current_ft[5])
+                dsl_ee_dis = np.array([ee_dis_x, ee_dis_y, ee_dis_z, ee_dis_rx, ee_dis_ry, ee_dis_rz])
+                ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio + dsl_ee_dis[:xyz] * dis_ratio_d
+                ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio + dsl_ee_dis[xyz:] * dis_ratio_r
+                ee_displacement[-1] = ee_displacement[-1] * self.ee_rotz_ratio
+            else:
+                ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio
+                ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio
+                ee_displacement[-1] = ee_displacement[-1] * self.ee_rotz_ratio
+            current_joint = np.array(self.rtde_r.getActualQ())
+            current_ee_pos = np.around(np.array(self.rtde_r.getActualTCPPose()[:3]), 4)
+            current_ee_rot = np.around(np.array(self.rtde_r.getActualTCPPose()[3:]), 4)
+            target_ee_pos = current_ee_pos + ee_displacement[:xyz]
+            target_ee_rot = current_ee_rot + ee_displacement[xyz:]
+            target_ee_rot = np.clip(target_ee_rot, self.ee_rot_low, self.ee_rot_high)
+            target_ee_pos = np.clip(target_ee_pos, self.ee_position_low, self.ee_position_high)
+            target_ee_quat = R.from_euler('xyz', target_ee_rot, degrees=True).as_quat()
+            target_arm_angles = self.inverse_kinematics(
+                    current_joint=current_joint, 
+                    target_position=target_ee_pos, 
+                    target_orientation=target_ee_quat,
+                )
+            target_arm_angles_original = np.copy(target_arm_angles)
+            return target_arm_angles_original, target_arm_angles
+    
+    def arm_joint_ctrl_to_target_arm_angles(self, arm_joint_ctrl: np.ndarray) -> np.ndarray:
+        arm_joint_ctrl = arm_joint_ctrl * self.joint_dis_ratio
+        current_arm_joint_angles = np.array([self.get_joint_angle(joint=i) for i in range(7)])
+        target_arm_angles = current_arm_joint_angles + arm_joint_ctrl
+        return target_arm_angles
+
+    def get_fingers_width(self) -> float:
+        finger1 = self.sim.get_joint_angle(self.finger1)
+        finger2 = self.sim.get_joint_angle(self.finger2)
+        return finger1 + finger2
+
+    def get_obs(self) -> np.ndarray:
+        if self.real_robot is False:
+            # ee_position = np.copy(self.get_ee_position())
+            ee_position = self.sim.get_site_position('attachment_site')
+            ee_rot = R.from_matrix(self.sim.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=False)
+            # ee_position = (ee_position - self.ee_mean) * self.norm_scale + self.norm_mean
+            # print("sim-ee-position:", ee_position)
+            # ee_velocity = np.array(self.get_ee_velocity())
+            # joint_angles = np.array([self.get_joint_angle(joint=self.joint_list[i]) for i in range(6)])
+            # print(joint_angles)
+            # joint_vels = np.array([self.sim.get_joint_velocity(joint=self.joint_list[i]) for i in range(6)])
+            ft_sensor = self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor")
+            ft_sensor = self.ft_last_obs * self.low_filter_gain + ft_sensor * (1 - self.low_filter_gain)
+            self.ft_last_obs = np.copy(ft_sensor)
+            # print(ft_sensor)
+            # print("ee_pos:", ee_position)
+            # print("ft sensor raw:", ft_sensor)
+            # print("---------")
+            if self._normalize_obs is True:
+                ee_position = (ee_position - self.ee_pos_mean) * self.ee_pos_norm_scale + self.ee_pos_norm_mean
+                ee_rot = (ee_rot - self.ee_rot_mean) * self.ee_rot_norm_scale + self.ee_rot_norm_mean
+                ft_sensor = (ft_sensor - self.ft_mean) * self.ft_norm_scale + self.ft_norm_mean
+                # print("self.ft_norm_mean:", self.ft_mean)
+                # print("ft sensor normalized:", ft_sensor)
+                # print("---------")
+            if self.vision_touch == "vision":
+                obs = np.concatenate((ee_position, ee_rot))
+            elif self.vision_touch == "vision-touch":
+                obs = np.concatenate((ee_position, ee_rot, ft_sensor))
+
+            return obs
+        else: # for real robot
+            current_ee_pos = np.around(np.array(self.rtde_r.getActualTCPPose()[:3]), 4)
+            current_ee_rot = np.around(np.array(self.rtde_r.getActualTCPPose()[3:]), 4)
+            current_ft = np.array(self.rtde_r.getActualTCPForce())
+            if self.vision_touch == "vision":
+                obs = np.concatenate((current_ee_pos, current_ee_rot))
+            elif self.vision_touch == "vision-touch":
+                obs = np.concatenate((current_ee_pos, current_ee_rot, current_ft))
+            return obs
+        
+    def reset(self) -> None:
+        self.sim.reset()
+        self.init_z_rot = 0.0
+        self.set_joint_neutral()
+        self.ft_last = np.array([0, 0, 0, 0, 0, 0])
+        self.ft_last_obs = np.array([0, 0, 0, 0, 0, 0])
+        if self.real_robot is True:
+            _items = 500
+            ft_record = np.zeros((_items, 6))
+            acc_record = np.zeros((_items, 3))
+            print("reset real robot pos and init the grasping for insertion.")
+            self._init_grasping_for_realRobot()
+            print("moveing ee to init pos ...")
+            time.sleep(2)
+            self.rtde_c.moveJ(self.j_init, self.vel, self.acc)
+            self.real_ee_init_pos = self.rtde_r.getActualTCPPose()[:3]
+            self.z_rot_offset = np.array(self.rtde_r.getActualQ())[-1] / self.d2r
+            self.real_init_z_rot = np.array(self.rtde_r.getActualQ())[-1] / self.d2r
+            self.real_z_rot_low = self.z_rot_offset + self.z_rot_low
+            self.real_z_rot_high = self.z_rot_offset + self.z_rot_high
+            for i in range(_items):
+                ft_record[i] = self.rtde_r.getActualTCPForce()
+                acc_record[i] = self.rtde_r.getActualToolAccelerometer()
+                time.sleep(0.01)
+            print(self.rtde_r.getActualTCPPose()[:3])
+            self.real_init_ft_sensor = np.mean(ft_record, axis=0)
+            print("init_ft:", self.real_init_ft_sensor)
+            print("init over.")
+            self._reset = True
+            time.sleep(1)
+
+    def log_info(self, gripper):
+        print(f"Pos: {str(gripper.get_current_position()): >3}  "
+            f"Open: {gripper.is_open(): <2}  "
+            f"Closed: {gripper.is_closed(): <2}  ")
+        
+    def _init_grasping_for_realRobot(self):
+        print("grapsing for real robot ...")
+        target1joint = np.array([2.28441358, -1.6466042,  1.94246418, -2.05400958, -1.55255968, -0.07506973])
+        target2joint = np.array([2.28441358, -1.41584693,  1.94246418, -2.05400958, -1.55255968, -0.07506973])
+        self.rtde_c.moveJ(target1joint, self.vel, self.acc)
+        self.rtde_c.moveJ(target2joint, self.vel, self.acc)
+        self.gripper.move_and_wait_for_pos(203, 255, 255)
+        # self.gripper.move_and_wait_for_pos(250, 255, 255)
+
+    def set_joint_neutral(self) -> None:
+        self.set_joint_angles(self.neutral_joint_values)
+
+    def joint_planner(self, grasping: bool, _time: float, current_joint: np.ndarray, target_joint: np.ndarray) -> None:
+        delta_joint = target_joint - current_joint
+        planner_steps = int(_time / self.sim.timestep)
+        if grasping is True:
+            finger_joint = np.array([200])
+            target_full_joint = np.concatenate((target_joint, finger_joint))
+            self.control_joints(target_full_joint)
+            self.sim.step()
+            # for i in range(planner_steps):
+            #     planned_delta_joint = delta_joint * math.sin((math.pi/2)*(i/planner_steps))
+            #     target_joint = planned_delta_joint + current_joint
+            #     target_full_joint = np.concatenate((target_joint, finger_joint))
+            #     self.control_joints(target_full_joint)
+            #     self.sim.step()
+        else:
+            for i in range(planner_steps):
+                planned_delta_joint = delta_joint * math.sin((math.pi/2)*(i/planner_steps))
+                target_joint = planned_delta_joint + current_joint
+                self.control_joints(target_joint)
+                self.sim.step()
+    
+    def real_joint_planner(self, grasping: bool, _time: float, current_joint: np.ndarray, target_joint: np.ndarray) -> None:
+        delta_joint = target_joint - current_joint
+        abs_delta_joint = np.absolute(delta_joint)
+        if np.any(abs_delta_joint > 0.3):
+            delta_joint = np.zeros(6)
+            print("delta joint is too big. --------")
+            print("current joint", current_joint)
+            print("target joint", target_joint)
+        
+        planner_steps = 10
+        vel = 0.001
+        acc = 0.001
+        dt = 1.0 / 500
+        lookahead_time = 0.05
+        gain = 300
+
+        # target_joint = current_joint + delta_joint
+        # self.rtde_c.servoJ(target_joint, vel, acc, dt, lookahead_time, gain)
+
+        # self.rtde_c.moveJ(target_joint, self.vel, self.acc, True)
+
+        # if self._init is False:
+        #     time.sleep(0.1)
+        # print("---testing1---",target_joint)
+        # print("---testing2---",current_joint)
+        delta_joint = np.array(delta_joint.tolist())
+        # print(delta_joint, type(delta_joint))
+        for i in range(planner_steps):
+            planned_delta_joint = delta_joint * math.sin((math.pi/2)*(i/planner_steps))
+            target_joint = planned_delta_joint + current_joint
+            # print(target_joint)
+           
+            self.rtde_c.servoJ(target_joint, vel, acc, dt, lookahead_time, gain)
+            time.sleep(0.001)
