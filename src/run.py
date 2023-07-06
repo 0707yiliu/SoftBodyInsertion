@@ -21,6 +21,8 @@ from stable_baselines3.common.callbacks import CallbackList, BaseCallback, Check
 import torch as th
 import numpy as np
 
+from loguru import logger
+
 parser = argparse.ArgumentParser(description="runner for UR_Gym")
 parser.add_argument('-a', '--alg', type=str, default="TD3", help="pick the used algorithm")
 parser.add_argument('-t', '--total_timesteps', type=int, default=5e5, help='the total trainning time steps')
@@ -152,7 +154,7 @@ for i in range(1):
         else:
             _learning_rate = args.learning_rate
         
-        _clip_range = linear_schedule(0.2)
+        _clip_range = linear_schedule(0.21)
 
         env = gym.make(
             args.env,
@@ -186,7 +188,7 @@ for i in range(1):
                 policy="MlpPolicy", 
                 env=env, 
                 verbose=1,
-                ent_coef=0.0011,
+                ent_coef=0.0012,
                 # clip_range_vf=0.5,
                 clip_range=_clip_range,
                 learning_rate=_learning_rate,
@@ -262,10 +264,10 @@ for i in range(1):
                 obs, _ = env.reset()
         # plt.subplot(1, 2, 1)
         # plt.show()
-                if args.d_s_l is False:
-                    np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_nodsl_"+ str(i) +'.npy', obs_record)
-                else:
-                    np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_"+ str(i) +'.npy', obs_record)
+        #         if args.d_s_l is False:
+        #             np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_nodsl_"+ str(i) +'.npy', obs_record)
+        #         else:
+        #             np.save('/home/yi/robotic_manipulation/peg_in_hole/ur3_rl_sim2real/src/recording/' + args.vision_touch + args.hole_size + running_time + "_"+ str(i) +'.npy', obs_record)
     
     elif args.realrobot is True:
         env = gym.make(

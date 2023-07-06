@@ -252,7 +252,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
             if self.task.is_success(self.task.get_achieved_goal(), self.task.get_goal()):
                 self._num_goal += 1
                 if self._num_goal >= self.num_goal:
-                    done = False
+                    done = True
                     self._num_goal = 0
                 else:
                     done = False
@@ -263,7 +263,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
             if self.task.is_success(self.task.get_achieved_goal(), self.task.get_goal()):
                 self._num_goal += 1
                 if self._num_goal >= self.num_goal:
-                    done = True
+                    done = False
                     print("success")
                     self._num_goal = 0
                 else:

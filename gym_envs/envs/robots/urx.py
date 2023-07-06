@@ -51,9 +51,9 @@ class UR(MujocoRobot):
         ee_positon_high: Optional[np.array] = None,
         gripper_joint_low: Optional[float] = None,
         gripper_joint_high: Optional[float] = None,
-        ee_dis_ratio: float = 0.006,
-        ee_rotxy_ratio: float = 0.015,
-        ee_rotz_ratio: float = 0.1,
+        ee_dis_ratio: float = 0.005,
+        ee_rotxy_ratio: float = 0.02,
+        ee_rotz_ratio: float = 0.09,
         joint_dis_ratio: float = 0.003,
         gripper_action_ratio: float = 0.001,
         gripper_max_joint: float = 0.67,
@@ -118,12 +118,12 @@ class UR(MujocoRobot):
             self.ft_sensor_high = np.array([ft_xyz, ft_xyz, ft_xyz, ft_rxyz, ft_rxyz, ft_rxyz])
             self.ft_sensor_low = np.array([-ft_xyz, -ft_xyz, -ft_xyz, -ft_rxyz, -ft_rxyz, -ft_rxyz])
         elif ur_gen == 3:
-            ft_xyz = 0.6
-            ft_rxyz = 0.1
+            ft_xyz = 0.025
+            ft_rxyz = 0.03
             self.ft_sensor_high = np.array([ft_xyz, ft_xyz, ft_xyz, ft_rxyz, ft_rxyz, ft_rxyz])
             self.ft_sensor_low = np.array([-ft_xyz, -ft_xyz, -ft_xyz, -ft_rxyz, -ft_rxyz, -ft_rxyz])
-            self.ee_rot_low = np.array([-10, -10, -180])
-            self.ee_rot_high = np.array([10, 10, 180])
+            self.ee_rot_low = np.array([-15, -15, -180])
+            self.ee_rot_high = np.array([15, 15, 180])
             self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([-0.1, 0.2, 0.845])
             self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.3, 0.5, 1.23])
         self.gripper_joint_low = gripper_joint_low if gripper_joint_low is not None else 0.3
@@ -150,7 +150,6 @@ class UR(MujocoRobot):
         self.ee_rot_mean = (self.ee_rot_high + self.ee_rot_low) / 2
         self.ee_rot_norm_mean = (norm_max + norm_min) / 2 * np.array([1, 1, 1])
         # F/T sensor norm params ---------
-
         self.ft_scale = self.ft_sensor_high - self.ft_sensor_low
         self.ft_norm_scale = (norm_max - norm_min) / self.ft_scale
         self.ft_mean = (self.ft_sensor_high + self.ft_sensor_low) / 2
@@ -211,12 +210,12 @@ class UR(MujocoRobot):
             # self.neutral_joint_values = np.array([1.19274333, -1.44175816, 1.74942402, -1.82642832, -1.54568981, 0])
             # self.neutral_joint_values = np.array([1.19274333, -1.84175816, 2.34942402, -2.02642832, -1.54568981, 0])
         elif ur_gen == 3:
-            self.ft_threashold_xyz = 0.00001
-            self.ft_threashold_rxyz = 0.00001
+            self.ft_threashold_xyz = 0.0001
+            self.ft_threashold_rxyz = 0.0001
             # self.neutral_joint_values = np.array([0.83094203, -1.30108324, 1.05714794, -1.38607852, -1.52985284,  0])
             # self.neutral_joint_values = np.array([0.83094203, -1.80108324, 1.55714794, -1.38607852, -1.52985284,  0])
             # self.neutral_joint_values = np.array([1.19094203, -1.30108324, 1.05714794, -1.38607852, -1.52985284,  0])0.86640135, -1.28055101 , 1.07492697, -1.36517228 ,-1.57079633 ,-0.70439498
-            self.neutral_joint_values = np.array([0.78781694, -1.42926988,  1.16459104, -1.30611748, -1.57079633, -0.78297938])
+            self.neutral_joint_values = np.array([0.95968604, -1.53791097,  1.284411,   -1.31729635, -1.57079633, -0.61111028])
         self.ee_body = "eef"
         self.finger1 = "right_driver_1"
         self.finger2 = "left_driver_1"
@@ -275,9 +274,9 @@ class UR(MujocoRobot):
         self.low_filter_gain = 0.8
         if self.real_robot is False:
             if self.dsl is True: # Dyn safety lock for EEF-XYZ-RPY
-                dis_ratio_d = np.array([0.0015, 0.0015, 0.0035]) # for ur5
+                dis_ratio_d = np.array([0.0002, 0.0002, 0.0006]) # for ur5
                 # dis_ratio_d = np.array([0.0003, 0.0003, 0.0005]) # for ur3 testing
-                dis_ratio_r = 0.05
+                dis_ratio_r = 0.025
                 current_ft = np.copy(self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
                 # print("current ft:", current_ft)
                 for ft_xyz in range(3):
@@ -288,10 +287,10 @@ class UR(MujocoRobot):
                 current_ft = self.ft_last * self.low_filter_gain + current_ft * (1 - self.low_filter_gain) # low-pass filter for F/T sensor
                 # print("current ft norm and filted:", current_ft)
                 self.ft_last = np.copy(current_ft)
-                ee_dis_x = -math.tanh(3 * current_ft[0])
-                ee_dis_y = -math.tanh(3 * current_ft[1])
+                ee_dis_x = math.tanh(3 * current_ft[0])
+                ee_dis_y = math.tanh(3 * current_ft[1])
                 ee_dis_z = math.tanh(3 * current_ft[2])
-                ee_dis_rx = math.tanh(100 * current_ft[3])
+                ee_dis_rx = -math.tanh(100 * current_ft[3])
                 ee_dis_ry = math.tanh(100 * current_ft[4])
                 ee_dis_rz = math.tanh(100 * current_ft[5])
                 dsl_ee_dis = np.array([ee_dis_x, ee_dis_y, ee_dis_z, ee_dis_rx, ee_dis_ry, ee_dis_rz])
@@ -301,6 +300,7 @@ class UR(MujocoRobot):
                 ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio + dsl_ee_dis[:xyz] * dis_ratio_d
                 ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio + dsl_ee_dis[xyz:-1] * dis_ratio_r
                 ee_displacement[-1] = ee_displacement[-1] * self.ee_rotz_ratio + dsl_ee_dis[-1] * dis_ratio_r
+                # print("ee displacement:", ee_displacement[:xyz])
             else:
                 ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio
                 ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio
@@ -400,7 +400,6 @@ class UR(MujocoRobot):
                 obs = np.concatenate((ee_position, ee_rot))
             elif self.vision_touch == "vision-touch":
                 obs = np.concatenate((ee_position, ee_rot, ft_sensor))
-
             return obs
         else: # for real robot
             current_ee_pos = np.around(np.array(self.rtde_r.getActualTCPPose()[:3]), 4)

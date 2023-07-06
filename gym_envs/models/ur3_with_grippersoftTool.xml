@@ -10,7 +10,7 @@
           <geom type="capsule" size=".0025 .001" group="3" />
         </default>
         <default class="tool_ball_joint">
-          <joint type="ball" range="0 6.28319" stiffness="0.0691208259071923" damping="0.007517692619584424" />
+          <joint type="ball" range="0 6.28319" stiffness="0.038381129657193036" damping="0.015101771431890443" />
         </default>
 
 

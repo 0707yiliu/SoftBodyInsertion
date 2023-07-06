@@ -32,8 +32,8 @@ class PeginHole(Task):
         # goal_range_high=np.array([0.0, 0.35, 0.93]),
         # goal_range_low=np.array([-0.1, 0.29, 0.85]), # for vision or nodsl
         # goal_range_high=np.array([0.0, 0.36, 0.91]),
-        goal_range_low=np.array([0.05, 0.51, 0.865]),  # for vision or nodsl
-        goal_range_high=np.array([0.1, 0.56, 0.935]),
+        goal_range_low=np.array([0.05, 0.52, 0.865]),  # for vision or nodsl
+        goal_range_high=np.array([0.1, 0.57, 0.935]),
         # goal_range_low=np.array([0, 0, 0]),  # for vision or nodsl
         # goal_range_high=np.array([0, 0, 0]),
         # goal_range_low=np.array([-0.04145, 0.31122, 0.88]), # for testing
@@ -54,8 +54,8 @@ class PeginHole(Task):
             self.goal_range_high = goal_range_high
             self.goal_range_low = goal_range_low
         elif ur_gen == 3:
-            self.goal_range_low = np.array([0.05, 0.31, 0.865]) # for vision or nodsl
-            self.goal_range_high = np.array([0.1, 0.36, 0.935])
+            self.goal_range_low = np.array([0.03, 0.32, 0.865]) # for vision or nodsl
+            self.goal_range_high = np.array([0.12, 0.37, 0.935])
         self.deg2rad = np.pi/180
         self.real_robot = real_robot
         self.suc_times = 0
@@ -126,9 +126,9 @@ class PeginHole(Task):
         object_bottom_position = np.copy(self.sim.get_site_position("ee_site"))
         # object_bottom_position[0] = -1 + self.goal_range_high[0] - object_bottom_position[0]
         hole_top_position = np.copy(self.sim.get_site_position("hole_top"))
-        hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.003
-        hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.003
-        hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.003
+        hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+        hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+        hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0035
 
         hole_bot_position = np.copy(self.sim.get_site_position("hole_bottom"))
         hole_bot_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.008
@@ -187,9 +187,9 @@ class PeginHole(Task):
             # self.goal = np.array([0.0, 0.36, 0.91])
             desired_goal = np.copy(self.goal)
             if self.vision_touch == 'vision' or 'vision-touch': 
-                self.goal[0] += (2.0 * np.random.random() + (-1.0)) * 0.0025
-                self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.0025
-                self.goal[2] += (2.0 * np.random.random() + (-1.0)) * 0.0025
+                self.goal[0] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+                self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+                self.goal[2] += (2.0 * np.random.random() + (-1.0)) * 0.0035
             # if self.vision_touch == 'vision' or self.vision_touch == 'vision-touch':
                 # desired_goal[2] -= 0.02
             # desired_goal[2] -= 0.02
@@ -234,8 +234,8 @@ class PeginHole(Task):
         # print("bot real bot>>", d_bottom)
         # print("-------")
 
-        return np.array(d > 0.9, dtype=np.float64)
-
+        # return np.array(d > 0.86510, dtype=np.float64)
+        return np.array(d > 0.875, dtype=np.float64)
         # d = distance(achieved_goal, desired_goal)
         # d_x = abs(achieved_goal[0] - desired_goal[0])
         # d_y = abs(achieved_goal[1] - desired_goal[1])
@@ -307,6 +307,10 @@ class PeginHole(Task):
         # print(self.r_step)
         total_steps = 400
         step_ratio = math.tanh((self.r_step / total_steps) * 10) + 0.3
+        if self.r_step >= 390:
+            step_gain = (math.tanh((total_steps - self.r_step) / 10) - 1) / 20
+        else:
+            step_gain = 0
         _step_val = - self.r_step / total_steps # 300 is the total step in one episode
         # step_ratio = math.tanh(self.r_step / 100)
         step_val = _step_val * step_ratio
@@ -316,23 +320,26 @@ class PeginHole(Task):
         d_top = distance(achieved_goal * scaled_ratio_top, target_top * scaled_ratio_top)
         r_top = (1 - math.tanh(50 * d_top)) * 0.2
         r_center = (1 - math.tanh(30 * d_center)) * 0.3
-        r_bot = (1 - math.tanh(10 * d_bottom)) * 0.98
+        r_bot = (1 - math.tanh(10 * d_bottom))
+        #
+        # _r_top = -math.tanh(10 * d_top) * 0.1
+        # _r_center = -math.tanh(30 * d_center) * 0.15
+        # _r_bot = -math.tanh(50 * d_bottom) * 1.5
 
-        _r_top = -math.tanh(50 * d_top) * 0.2
-        _r_center = -math.tanh(50 * d_center) * 0.5
-        _r_bot = -math.tanh(50 * d_bottom) * 0.98
+        _r_top = -d_top * 0.1
+        _r_center = -d_center * 0.15
+        _r_bot = -d_bottom * 1.5
+        # if achieved_goal[2] < target_top[2]:
+        #     _r_top = 0
+        # if achieved_goal[2] < desired_goal[2]:
+        #     _r_center = 0
 
-        if achieved_goal[2] < target_top[2]:
-            _r_top = 0
-        if achieved_goal[2] < desired_goal[2]:
-            _r_center = 0
-
-        if r_bot > 0.882:
+        if r_bot > 0.865: # this is used for early stop method, which need to be changed when switching to other methods.
             self.suc_ratio += 0.1
-            get_suc = 1.5 * self.suc_ratio
-        elif r_bot > 0.85:
-            self.suc_ratio = 1.1
-            get_suc = 1
+            get_suc = 2.5 * self.suc_ratio
+        # elif r_bot > 0.851:
+        #     self.suc_ratio = 1.5
+        #     get_suc = 1
         else:
             self.suc_ratio = 1
             get_suc = 0
@@ -356,8 +363,10 @@ class PeginHole(Task):
         #     print("step1")
         # print("dis:", d_top)
         # return r_top + r_center + r_bot + g_top + g_mid + self.r_step
-        return (r_top + r_center + r_bot) + get_suc + r_objtop_holetop
+        # return (r_top + r_center + r_bot) + get_suc + r_objtop_holetop
         # return ((_r_top + _r_center + _r_bot) * step_ratio/step_ratio)/1 + get_suc
+        return (_r_top + _r_center + _r_bot) + get_suc + step_gain
+
         # # print(achieved_goal[2] - desired_goal[2])
         # # print(d)
         # # x_ratio = 2.3

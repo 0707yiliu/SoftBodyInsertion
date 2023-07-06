@@ -259,7 +259,7 @@ class Mujoco_Func:
 #     print("fw:", test_env.forward_kinematics(fw_qpos))
 #     current_ee_rot = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=True)
 #     print(current_ee_rot)
-#     print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, np.array([0.15, 0.31, 1.22]), np.array([0, 0, 0, 1])))
+#     print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, np.array([0.08, 0.31, 1.22]), np.array([0, 0, 0, 1])))
 #     # print(test_env.inverse_kinematics(current_arm_joint, [0.075, 0.575, 0.9], r.as_quat()))
 #     current_ft = np.copy(test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
 #     print("ft sensor data:", current_ft)
@@ -268,4 +268,4 @@ class Mujoco_Func:
 #         test_env.set_joint_angles(fw_qpos)
 #         i = 0
 #
-
+#
