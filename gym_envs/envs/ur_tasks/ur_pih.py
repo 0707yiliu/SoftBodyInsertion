@@ -26,6 +26,17 @@ class URPeginHoleEnv(RobotTaskEnv):
         dsl: bool = False,
         domain_randomization: bool = False,
         ur_gen: int = 5,
+        dsl_dampRatio_d: np.ndarray = np.array([0, 0, 0]),
+        dsl_dampRatio_r: np.ndarray = np.array([0, 0, 0]),
+        ft_LowPass_damp: float = 0.1,
+        ft_xyz_threshold_ur3: np.ndarray = np.array([0, 0, 0]),
+        reward_surface_weight: np.ndarray = np.array([0, 0, 0]),
+        ft_rpy_threshold_ur3: np.ndarray = np.array([0, 0, 0]),
+        ft_threshold_xyz: float = 0.3,
+        ft_threshold_rpy: float = 0.2,
+        ee_dis_ratio: float = 0.00085,
+        enable_record: bool = False,
+        recording_path: str = "nopath",
         ) -> None:
         # print("--------")
         sim = Mujoco_Func(
@@ -47,6 +58,14 @@ class URPeginHoleEnv(RobotTaskEnv):
             real_robot=real_robot,
             dsl=dsl,
             ur_gen=ur_gen,
+            dsl_dampRatio_d=dsl_dampRatio_d,
+            dsl_dampRatio_r=dsl_dampRatio_r,
+            ft_LowPass_damp=ft_LowPass_damp,
+            ft_xyz_threshold_ur3=ft_xyz_threshold_ur3,
+            ft_rpy_threshold_ur3=ft_rpy_threshold_ur3,
+            ft_threshold_xyz=ft_threshold_xyz,
+            ft_threshold_rpy=ft_threshold_rpy,
+            ee_dis_ratio=ee_dis_ratio,
             )
         task = PeginHole(
             sim=sim,
@@ -56,6 +75,9 @@ class URPeginHoleEnv(RobotTaskEnv):
             _normalize=normalizeObs,
             real_robot=real_robot,
             ur_gen=ur_gen,
+            reward_surface_weight=reward_surface_weight,
+            enable_record=enable_record,
+            recording_path=recording_path,
             )
         super().__init__(
             robot, 

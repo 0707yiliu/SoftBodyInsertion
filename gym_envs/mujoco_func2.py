@@ -107,12 +107,17 @@ class Mujoco_Func:
         mujoco.mj_forward(self.model, self.data)
         if render:
             self.viewer = mujoco_viewer.MujocoViewer(self.model, self.data)
+            # self.viewer.cam.trackbodyid = 0
+            # self.viewer.cam.lookat[1] = 0.15
+            # self.viewer.cam.lookat[2] = 0.15
+            # self.viewer.cam.elevation = -60
+            # # self.viewer.cam.azimuth = 0
         self.render = render
 
         self.domain_randomization = domain_randomization
         self.file_root = file_root
         self.tool_stiffness_range = np.array([0.01, 0.1])
-        self.tool_damper_range = np.array([0.005, 0.05])
+        self.tool_damper_range = np.array([0.003, 0.05])
 
         self.n_substeps = 10
         self.timestep = 0.001
@@ -230,42 +235,50 @@ class Mujoco_Func:
     def no_rendering(self) -> Iterator[None]:
         pass#
 
+
+test = False
 #
-# test_env = Mujoco_Func()
-#
-# i = 0
-# # fw_qpos = np.array([1.53, -1.53, 1.53, -1.53, -1.53, -1.57079633])
-# # fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0])
-# fw_qpos = np.array([0.78781694, -1.42926988,  1.16459104, -1.30611748, -1.57079633, -0.78297938])
-# joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
-#               'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
-# current_arm_joint = np.zeros(6)
-# test_env.reset()
-# test_env.set_joint_angles(fw_qpos)
-# while i < 5000:
-#     i += 1
-#     test_env.step()
-#     test_env.control_joints(fw_qpos)
-#     for j in range(6):
-#         current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
-#     r = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3))
-#     # r = test_env.get_body_quaternion("wrist_3_link")
-#     site_pos = test_env.get_site_position("attachment_site")
-#     print("---------------")
-#     print("site pos:", site_pos)
-#     print("sim qua:", r.as_quat())
-#     # print("ft data:", test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
-#     # print("sim tool:", test_env.get_site_position('obj_bottom'))
-#     print("fw:", test_env.forward_kinematics(fw_qpos))
-#     current_ee_rot = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3)).as_euler('xyz', degrees=True)
-#     print(current_ee_rot)
-#     print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, np.array([0.08, 0.31, 1.22]), np.array([0, 0, 0, 1])))
-#     # print(test_env.inverse_kinematics(current_arm_joint, [0.075, 0.575, 0.9], r.as_quat()))
-#     current_ft = np.copy(test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
-#     print("ft sensor data:", current_ft)
-#     if i > 2000:
-#         test_env.reset()
-#         test_env.set_joint_angles(fw_qpos)
-#         i = 0
-#
-#
+if test is True:
+    test_env = Mujoco_Func()
+
+    i = 0
+    fw_qpos = np.array([3.03594358, -1.54393884,  1.29065137, -1.31750886, -1.57079632, -1.67803805])
+    # fw_qpos = np.array([2.6471949,  -1.57136391,  1.31850185, -1.31793427, -1.57079632, -2.06678673])
+    # fw_qpos = np.array([2.96539662, -1.57342686,  1.3205609,  -1.31793037, -1.57079633,  0])
+    # fw_qpos = np.array([1.19274333, -1.24175816,  1.74942402, -1.02642832, -1.54568981, 0])
+    # fw_qpos = np.array([1.67679806, -1.53791097,  1.28441101, -1.31729636, -1.57079633, -3.24759439])
+    joint_name = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
+                  'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 'right_driver_joint']
+    current_arm_joint = np.zeros(6)
+    test_env.reset()
+    test_env.set_joint_angles(fw_qpos)
+    while i < 5000:
+        i += 1
+        test_env.step()
+        test_env.control_joints(fw_qpos)
+        for j in range(6):
+            current_arm_joint[j] = np.copy(test_env.get_joint_angle(joint_name[j]))
+        r = R.from_matrix(test_env.get_site_mat('attachment_site').reshape(3, 3))
+        # r = test_env.get_body_quaternion("wrist_3_link")
+        site_pos = test_env.get_site_position("attachment_site")
+        print("---------------")
+        print("ee pos:", site_pos)
+        print("ee qua:", r.as_quat())
+        # print("ft data:", test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
+        # print("sim tool:", test_env.get_site_position('obj_bottom'))
+        print("fw:", test_env.forward_kinematics(fw_qpos))
+        current_ee_rot = r.as_euler('xyz', degrees=True)
+        print("ee rot:", current_ee_rot * (3.14/180))
+        target_pos = np.array([0.30865066, 0.07977146, 0.12192+0.87])
+        print("ik qpos:", test_env.inverse_kinematics(current_arm_joint, target_pos, np.array([0, 0, 0, 1])))
+        # print(test_env.inverse_kinematics(current_arm_joint, [0.075, 0.575, 0.9], r.as_quat()))
+        current_ft = np.copy(test_env.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor"))
+        print("ft sensor data:", current_ft)
+        fw_qpos = test_env.inverse_kinematics(current_arm_joint, target_pos, np.array([0, 0, 0, 1]))
+
+        if i > 2000:
+            test_env.reset()
+            test_env.set_joint_angles(fw_qpos)
+            i = 0
+
+    #

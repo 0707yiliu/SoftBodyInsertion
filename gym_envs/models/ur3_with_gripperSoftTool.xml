@@ -127,7 +127,7 @@
         <geom size=".08 .08 .04" pos="0 0 0.4" type="box" />
         <geom size=".04 .04 .435" pos="0 0 0" type="box" />
         <inertial pos="0 0 0" mass="1000" diaginertia="0 0 0" />
-        <body name="base_link" pos="0 0 0.435">
+        <body name="base_link" pos="0 0 0.435" quat="0.75 0 0.75">
                 <inertial pos="0 0 0" quat="0.5 0.5 -0.5 0.5" mass="4" diaginertia="0.005625 0.00305317 0.00305317" />
                 <geom type="mesh"  mesh="base" material="black" class="visual_arm"/>
                 <body name="shoulder_link" pos="0 0 0.1530">

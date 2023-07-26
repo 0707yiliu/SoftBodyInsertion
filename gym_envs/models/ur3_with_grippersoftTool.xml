@@ -10,7 +10,7 @@
           <geom type="capsule" size=".0025 .001" group="3" />
         </default>
         <default class="tool_ball_joint">
-          <joint type="ball" range="0 6.28319" stiffness="0.038381129657193036" damping="0.015101771431890443" />
+          <joint type="ball" range="0 6.28319" stiffness="0.04649022324606837" damping="0.01877269284098889" />
         </default>
 
 
@@ -29,8 +29,8 @@
           <joint armature="0.1" damping="200" />
           <position kp="4000" forcerange="-150 150" ctrllimited="true" />
           <default class="size3_limited">
-            <joint range="-3.1415 3.1415" />
-            <position ctrlrange="-3.1415 3.1415" ctrllimited="true" />
+            <joint range="-3.14 3.14" />
+            <position ctrlrange="-3.14 3.14" ctrllimited="true" />
           </default>
         </default>
         <default class="size1">
@@ -118,7 +118,7 @@
             <geom size=".08 .08 .035" pos="0 0 0.4" type="box" material="bench_mat" />
             <geom size=".04 .04 .435" pos="0 0 0" type="box" material="bench_mat" />
             <inertial pos="0 0 0" mass="1000" diaginertia="0 0 0" />
-            <body name="base_link" pos="0 0 0.435">
+            <body name="base_link" pos="0 0 0.435" quat="0 0 0 1">
                 <inertial pos="0 0 0" mass="4" diaginertia="0.005625 0.00305317 0.00305317" />
                 <geom type="mesh" mesh="base" material="black" class="visual_arm" />
                 <body name="shoulder_link" pos="0 0 0.1530">
@@ -145,10 +145,10 @@
                                         <inertial pos="0 0 0" mass="0.35" diaginertia="0.000984375 0.000912187 0.000912187" />
                                         <joint name="wrist_3_joint" class="size1" axis="0 1 0" />
                                         <geom name="wrist_3_link" type="mesh" mesh="wrist3" material="black" class="visual_arm" />
-                                        <site name="attachment_site" pos="0 0.1 0" quat="1 1 0 0" />
+                                        <site name="attachment_site" pos="0 0.26808 0" quat="1 1 0 0" />
                                         <body name="base_mount" pos="0 0.1 -0.002" quat="0.707107 -0.707107 0 0" childclass="2f85">
                                             <site name="ee_site" pos="0 0 0.06" size="0.005 0.005 0.005" type="sphere" rgba="0.3 0.2 0.1 1" />
-                                            <body name="cylinder_obj" pos="0 0 0.15">
+                                            <body name="cylinder_obj" pos="0 0 0.1">
                                                 <geom class="collision_tool" />
                                                 <geom class="visual_tool" rgba="1 0.5 0.5 1" />
                                                 <joint class="tool_ball_joint" />

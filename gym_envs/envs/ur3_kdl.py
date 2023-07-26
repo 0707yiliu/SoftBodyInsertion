@@ -36,8 +36,8 @@ class URx_kdl():
         f_pos = np.zeros(3)
         for i in range(3):
             f_pos[i] = pos.p[i]
-        print("urdf end-effector quaternion:", kdl.Rotation(pos.M).GetQuaternion())
-        return f_pos
+        # print("urdf end-effector quaternion:", kdl.Rotation(pos.M).GetQuaternion())
+        return f_pos, kdl.Rotation(pos.M).GetQuaternion()
     
     def inverse(self, init_joint, goal_pose, goal_rot):
         try:

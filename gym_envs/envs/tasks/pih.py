@@ -42,8 +42,23 @@ class PeginHole(Task):
         _normalize: bool = False,
         real_robot: bool = False,
         ur_gen: int = 5,
+        reward_surface_weight: np.ndarray = np.array([0, 0, 0]),
+        real2sim: bool = True, # this flag is used to test the real robot in simulator.
+        sim_test_with_camera: bool = True,
+        enable_record: bool = False,
+        recording_path: str = "nopath",
     ) -> None:
+        self.recording_path = recording_path
+        self.enable_record = enable_record
+        simTesting = False
+        if simTesting is True:
+            self.real2sim = real2sim
+            self.sim_test_with_camera = sim_test_with_camera
+        else:
+            self.real2sim = False
+            self.sim_test_with_camera = False
         super().__init__(sim)
+        self.reward_surface_weight = reward_surface_weight
         self.z_distance_threshold = z_distance_threshold
         self._normalize_obs = _normalize
         self.vision_touch=vision_touch
@@ -54,16 +69,16 @@ class PeginHole(Task):
             self.goal_range_high = goal_range_high
             self.goal_range_low = goal_range_low
         elif ur_gen == 3:
-            self.goal_range_low = np.array([0.03, 0.32, 0.865]) # for vision or nodsl
-            self.goal_range_high = np.array([0.12, 0.37, 0.935])
+            self.goal_range_low = np.array([0.31, 0.04, 0.865]) # for vision or nodsl
+            self.goal_range_high = np.array([0.36, 0.09, 0.935])
         self.deg2rad = np.pi/180
         self.real_robot = real_robot
         self.suc_times = 0
         self.suc_ratio = 1
         # AprilTag func ---------------------
-        self.sim_test_with_camera = False
+
         if self.sim_test_with_camera is True:
-            self.TagDetection = AprilTag()
+            self.TagDetection = AprilTag(rootid=10, objid=6, enable_recording=self.enable_record, path=self.recording_path)
             self.TransferX = 0
             self.TransferY = 0
             self.TransferZ = 0
@@ -72,7 +87,7 @@ class PeginHole(Task):
             self.AprilTagThread.start()
 
         if self.real_robot is True and self.sim_test_with_camera is False:
-            self.TagDetection = AprilTag()
+            self.TagDetection = AprilTag(rootid=10, objid=6, enable_recording=self.enable_record, path=self.recording_path)
             self.TransferX = 0
             self.TransferY = 0
             self.TransferZ = 0
@@ -123,28 +138,48 @@ class PeginHole(Task):
         #     object_bottom_position = self.sim.get_site_position("obj_bottom")
         #     hole_position = self.sim.get_site_position('box_surface')
         #     return np.concatenate((object_bottom_position, hole_position))
-        object_bottom_position = np.copy(self.sim.get_site_position("ee_site"))
-        # object_bottom_position[0] = -1 + self.goal_range_high[0] - object_bottom_position[0]
-        hole_top_position = np.copy(self.sim.get_site_position("hole_top"))
-        hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0035
-        hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0035
-        hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+        if self.real_robot is False:
+            object_bottom_position = np.copy(self.sim.get_site_position("ee_site"))
+            # object_bottom_position[0] = -1 + self.goal_range_high[0] - object_bottom_position[0]
+            hole_top_position = np.copy(self.sim.get_site_position("hole_top"))
+            hole_bot_position = np.copy(self.sim.get_site_position("hole_bottom"))
+            if self.real2sim is False:
+                hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+                hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+                hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0035
 
-        hole_bot_position = np.copy(self.sim.get_site_position("hole_bottom"))
-        hole_bot_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.008
-        hole_bot_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.008
-        hole_bot_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.008
-        # print("sim tool bot:", self.sim.get_site_position('hole_bottom'))
-        # print("sim tool top:", self.sim.get_site_position('hole_top'))
-        # obs = np.concatenate((hole_top_position, hole_bot_position))
-        # print("hole top pos:", hole_top_position)
-        # print("hole bot pos:", hole_bot_position)
-        # print("---------")
-        if self._normalize_obs is True:
-            hole_top_position = (hole_top_position - self.goal_mean) * self.norm_scale + self.norm_mean
-        obs = np.copy(hole_top_position)
-        # print("hole top pos:", obs[:3])
-        return obs
+                hole_bot_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.008
+                hole_bot_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.008
+                hole_bot_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.008
+            # print("sim tool bot:", self.sim.get_site_position('hole_bottom'))
+            # print("sim tool top:", self.sim.get_site_position('hole_top'))
+            # obs = np.concatenate((hole_top_position, hole_bot_position))
+            # print("hole top pos:", hole_top_position)
+            # print("self.goal:", self.goal, self.goal - hole_top_position)
+            # print("hole bot pos:", hole_bot_position)
+            # print("---------")
+            if self._normalize_obs is True:
+                hole_top_position = (hole_top_position - self.goal_mean) * self.norm_scale + self.norm_mean
+            obs = np.copy(hole_top_position)
+            # print("hole top pos:", obs[:3])
+            # 0.3415388119839424
+            # 0.058758406693567224
+            # 0.8867685231006206
+            return obs
+        else:
+            hole_y_offset = 0
+            hole_x_offset = 0
+            hole_z_offset = 0.87 # use the same range with sim, compensate the fixed high of table in simulation.
+            hole_position = np.array([self.TransferX + hole_x_offset,
+                                      self.TransferY + hole_y_offset,
+                                      self.TransferZ + hole_z_offset])
+            print("hole pos:", hole_position)
+            print("hole pos (raw):", self.TransferZ)
+            if self._normalize_obs is True:
+                hole_position = (hole_position - self.goal_mean) * self.norm_scale + self.norm_mean
+            obs = np.copy(hole_position)
+
+            return obs
 
     def get_achieved_goal(self) -> np.ndarray:
         object_position = np.copy(self.sim.get_site_position("obj_bottom"))
@@ -174,22 +209,25 @@ class PeginHole(Task):
             hole_x_offset = 0
             hole_y_offset = 0
             hole_z_offset = 0
-            hole_position = np.array([-self.TransferX + hole_x_offset, 
-                                            -self.TransferY + hole_y_offset, 
-                                            self.TransferZ + hole_z_offset])
+            hole_position = np.array([self.TransferX + hole_y_offset,
+                                      self.TransferY + hole_x_offset,
+                                      self.TransferZ + hole_z_offset])
             hole_position[2] += 0.87
             desired_goal = np.copy(hole_position)
             self.goal = np.copy(desired_goal)
+            desired_goal[2] -= 0.015
+            print("stc:", desired_goal)
 
 
         else:
             self.goal = self._sample_goal()
             # self.goal = np.array([0.0, 0.36, 0.91])
             desired_goal = np.copy(self.goal)
-            if self.vision_touch == 'vision' or 'vision-touch': 
-                self.goal[0] += (2.0 * np.random.random() + (-1.0)) * 0.0035
-                self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.0035
-                self.goal[2] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+            if self.real2sim is False:
+                if self.vision_touch == 'vision' or 'vision-touch':
+                    self.goal[0] += (2.0 * np.random.random() + (-1.0)) * 0.0007
+                    self.goal[1] += (2.0 * np.random.random() + (-1.0)) * 0.0007
+                    self.goal[2] += (2.0 * np.random.random() + (-1.0)) * 0.0007
             # if self.vision_touch == 'vision' or self.vision_touch == 'vision-touch':
                 # desired_goal[2] -= 0.02
             # desired_goal[2] -= 0.02
@@ -200,7 +238,10 @@ class PeginHole(Task):
         self.sim.set_mocap_pos(mocap="box", pos=desired_goal)
         ## randomize the rotation of the hole in z-axis direction
         z_deg = (2.0 * np.random.random() + (-1.0)) * 90
-        xy_deg = (2.0 * np.random.random() + (-1.0)) * 10
+        xy_deg = (2.0 * np.random.random() + (-1.0)) * 5
+        # for real world test
+        if self.real2sim is True:
+            xy_deg = (2.0 * np.random.random() + (-1.0)) * 0
         desired_quat = euler_to_quaternion(z_deg * self.deg2rad, (-90+xy_deg) * self.deg2rad, 0)
         self.sim.set_mocap_quat(mocap="box", quat=desired_quat)
 
@@ -211,6 +252,9 @@ class PeginHole(Task):
     def _sample_goal(self) -> np.ndarray:
         """Randomize goal."""
         goal = np.random.uniform(self.goal_range_low, self.goal_range_high)
+        # for real robot test
+        # if self.real2sim is True:
+        #     goal = np.array([0.34789, 0.0550, 0.0017+0.87])
         # goal[2] += 0.05
         return goal
 
@@ -305,9 +349,9 @@ class PeginHole(Task):
         # self.r_step -= 0.0005
         self.r_step += 1
         # print(self.r_step)
-        total_steps = 400
+        total_steps = 350
         step_ratio = math.tanh((self.r_step / total_steps) * 10) + 0.3
-        if self.r_step >= 390:
+        if self.r_step >= total_steps-20:
             step_gain = (math.tanh((total_steps - self.r_step) / 10) - 1) / 20
         else:
             step_gain = 0

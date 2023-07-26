@@ -13,7 +13,7 @@ import sys, os, math, time
 from scipy.spatial.transform import Rotation as R
 
 class AprilTag:
-    def __init__(self) -> None:
+    def __init__(self, rootid=10, objid=6, enable_recording=False, path=None) -> None:
 
         # ----------- ZED initial ------------
         self.zed = sl.Camera()
@@ -39,6 +39,10 @@ class AprilTag:
         self.FHD_k3 = -0.0104227
         self.FHD_p1 = 0.000340606
         self.FHD_p2 = 0.000133078
+        self.enable_record = enable_recording
+        self.recording_count = 0
+        self.recording_path = path
+        print("complete the ZED2i initialization.")
         # ------------------------------------------
         self.K = np.array([[self.FHD_fx, 0., self.FHD_cx],
                       [0., self.FHD_fy, self.FHD_cy],
@@ -55,22 +59,33 @@ class AprilTag:
         #               [  0.,         264.03675933, 197.48212171],
         #               [  0.      ,     0.  ,         1.        ]])
         # self.K1 = np.array([263.04691686,   264.03675933,         331.23900253, 197.48212171])
+
         self.base_dia = 12.8 + 2*0.45
-        self.id_root = 6
-        self.id_object = 8
-        self.tag_len = 6.955
-        self.tag_side = 1.84
+        self.id_root = rootid
+        self.id_object = objid
+        self.tag_len = 3.59
+        self.tag_outer_side = 0.91
         self.objoffset = 3
-        root_z_offset = 0.3023
+        obj_offset_y = 3.97
+        obj_offset_z = 2.5
+        root_z_offset = 1.25
+        root_base_x = 14.5
+        root_base_y = 12.83
 
         self.rootTobj = np.identity(4)
         self.rootTrootside = np.identity(4)
         self.rootsideTcam = np.identity(4)
         self.camTobjside = np.identity(4)
         self.objsideTobj = np.identity(4)
-        self.rootTrootside[0, 3] = self.base_dia/2 + self.tag_len/2 + self.tag_side
-        self.rootTrootside[2, 3] = -root_z_offset
-        self.objsideTobj[0, 3] = -(self.tag_len/2 + self.tag_side + self.objoffset)
+        # self.rootTrootside[0, 3] = self.base_dia/2 + self.tag_len/2 + self.tag_side
+        # self.rootTrootside[2, 3] = -root_z_offset
+        # self.objsideTobj[0, 3] = -(self.tag_len/2 + self.tag_side + self.objoffset)
+        self.rootTrootside[0, 3] = ((root_base_x / 2) - (self.tag_len / 2 + self.tag_outer_side))
+        self.rootTrootside[1, 3] = (self.tag_len / 2 + self.tag_outer_side + root_base_y / 2)
+        self.rootTrootside[2, 3] = root_z_offset
+        # objsideTobj[0, 3] = -(tag_len / 2 + tag_outer_side + objoffset)
+        self.objsideTobj[1, 3] = -(self.tag_len / 2 + self.tag_outer_side + obj_offset_y)
+        self.objsideTobj[2, 3] = -obj_offset_z
 
 
         self.x = 0
@@ -314,9 +329,15 @@ class AprilTag:
             # now we just output x, y, z (unit: meter)
             self.x = self.rootTobj[0, 3] / 100
             self.y = -self.rootTobj[1, 3] / 100
-            self.z = -self.rootTobj[2, 3] /100
+            self.z = -self.rootTobj[2, 3] / 100
             # print(x, y, z)
-        # cv2.imshow("camera-image", img)  
+
+        if self.enable_record is True:
+            self.recording_count += 1
+            filename = str(self.recording_path + str(self.recording_count) + ".jpg")
+            cv2.imwrite(filename, img)
+        # cv2.imshow("camera-image", img)
+
         return self.x, self.y, self.z
             # print(rootTobj)
             # print("dis:", dis_root_obj)
