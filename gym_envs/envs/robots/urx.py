@@ -138,8 +138,9 @@ class UR(MujocoRobot):
         elif ur_gen == 3:
             self.ft_sensor_high = np.array([ft_xyz_threshold_ur3[0], ft_xyz_threshold_ur3[1], ft_xyz_threshold_ur3[2], ft_rpy_threshold_ur3[0], ft_rpy_threshold_ur3[1], ft_rpy_threshold_ur3[2]])
             self.ft_sensor_low = np.array([-ft_xyz_threshold_ur3[0], -ft_xyz_threshold_ur3[1], -ft_xyz_threshold_ur3[2], -ft_rpy_threshold_ur3[0], -ft_rpy_threshold_ur3[1], -ft_rpy_threshold_ur3[2]])
-            self.ee_rot_low = np.array([-30, -30, -30])
-            self.ee_rot_high = np.array([30, 30, 30])
+            rotation_limitation = 35
+            self.ee_rot_low = np.array([-rotation_limitation, -rotation_limitation, -rotation_limitation])
+            self.ee_rot_high = np.array([rotation_limitation, rotation_limitation, rotation_limitation])
             self.ee_position_low = ee_positon_low if ee_positon_low is not None else np.array([0.25, 0.01, 0.845])
             self.ee_position_high = ee_positon_high if ee_positon_high is not None else np.array([0.45, 0.21, 1.045])
         self.gripper_joint_low = gripper_joint_low if gripper_joint_low is not None else 0.3
@@ -303,7 +304,7 @@ class UR(MujocoRobot):
                 # print("current ft norm and filted:", current_ft)
                 self.ft_last = np.copy(current_ft)
                 ee_dis_x = -math.tanh(3 * current_ft[0])
-                ee_dis_y = math.tanh(3 * current_ft[1])
+                ee_dis_y = -math.tanh(3 * current_ft[1])
                 ee_dis_z = math.tanh(3 * current_ft[2])
                 ee_dis_rx = -math.tanh(10 * current_ft[3])
                 ee_dis_ry = -math.tanh(10 * current_ft[4])
@@ -361,12 +362,14 @@ class UR(MujocoRobot):
                             1 - self.low_filter_gain)  # low-pass filter for F/T sensor
                 # print("current ft norm and filted:", current_ft)
                 self.ft_last = np.copy(current_ft)
-                ee_dis_x = -math.tanh(3 * current_ft[0]/10)
-                ee_dis_y = math.tanh(3 * current_ft[1]/10)
+                # red: - + + + - -
+                # black: + - + + - -
+                ee_dis_x = math.tanh(3 * current_ft[0]/10)
+                ee_dis_y = -math.tanh(3 * current_ft[1]/10)
                 ee_dis_z = math.tanh(3 * current_ft[2]/10)
-                ee_dis_rx = -math.tanh(10 * current_ft[3])
-                ee_dis_ry = -math.tanh(10 * current_ft[4])
-                ee_dis_rz = math.tanh(10 * current_ft[5])
+                ee_dis_rx = math.tanh(10 * current_ft[3])
+                ee_dis_ry = math.tanh(10 * current_ft[4])
+                ee_dis_rz = -math.tanh(10 * current_ft[5])
                 dsl_ee_dis = np.array([ee_dis_x, ee_dis_y, ee_dis_z, ee_dis_rx, ee_dis_ry, ee_dis_rz])
                 ee_displacement[:xyz] = ee_displacement[:xyz] * self.ee_dis_ratio + dsl_ee_dis[:xyz] * self.dsl_dampRatio_d
                 ee_displacement[xyz:-1] = ee_displacement[xyz:-1] * self.ee_rotxy_ratio \
@@ -382,15 +385,15 @@ class UR(MujocoRobot):
             current_ee_pos = np.around(np.array(self.rtde_r.getActualTCPPose()[:3]), 4)
             current_ee_pos[2] += self.fixedZoffsetwithSim # use the same range with sim, compensate the fixed high of table in simulation.
             current_ee_pos_from_urdf, current_ee_quat = self.forward_kinematics(qpos=current_joint)
-            print("current ee pos by URDF:", current_ee_pos_from_urdf)
+            # print("current ee pos by URDF:", current_ee_pos_from_urdf)
             current_ee_rot = quaternion_to_euler(current_ee_quat[0],
                                                  current_ee_quat[1],
                                                  current_ee_quat[2],
                                                  current_ee_quat[3]) / self.d2r
-            print("current ee quat:", current_ee_quat)
-            print("current ee rot:", current_ee_rot)
-            print("current ee pos:", current_ee_pos[0], current_ee_pos[1], current_ee_pos[2] - self.fixedZoffsetwithSim)
-            print("current F/T (normed and filtered):", current_ft)
+            # print("current ee quat:", current_ee_quat)
+            # print("current ee rot:", current_ee_rot)
+            # print("current ee pos:", current_ee_pos[0], current_ee_pos[1], current_ee_pos[2] - self.fixedZoffsetwithSim)
+            # print("current F/T (normed and filtered):", current_ft)
             # current_ee_rot = np.around(np.array(self.rtde_r.getActualTCPPose()[3:]), 4)
             target_ee_pos = current_ee_pos + ee_displacement[:xyz]
             target_ee_rot = current_ee_rot + ee_displacement[xyz:]
@@ -398,9 +401,9 @@ class UR(MujocoRobot):
             target_ee_pos = np.clip(target_ee_pos, self.ee_position_low, self.ee_position_high)
             target_ee_pos[2] -= self.fixedZoffsetwithSim # use the same range with sim, compensate the fixed high of table in simulation.
             target_ee_quat = R.from_euler('xyz', target_ee_rot, degrees=True).as_quat()
-            print("target ee pos:", target_ee_pos)
-            print("target ee rot:", target_ee_rot)
-            print("-------------")
+            # print("target ee pos:", target_ee_pos)
+            # print("target ee rot:", target_ee_rot)
+            # print("-------------")
             # !fixed the ee position for testing kinematic
             # target_ee_pos = np.array([0.309, 0.0801, 0.1817])
             # # self.y_rot += 0.00005
@@ -539,10 +542,12 @@ class UR(MujocoRobot):
         print("grapsing for real robot ...")
         # target1joint = np.array([2.28441358, -1.6466042,  1.94246418, -2.05400958, -1.55255968, -0.07506973])
         # target2joint = np.array([2.28441358, -1.41584693,  1.94246418, -2.05400958, -1.55255968, -0.07506973])
-        target1joint = np.array([3.7692291736602783, -1.5450309079936524, 1.704399887715475, -1.8301321468748988, -1.5807388464557093, -2.4963484446154993])
+        # target1joint = np.array([3.7692291736602783, -1.5450309079936524, 1.704399887715475, -1.8301321468748988, -1.5807388464557093, -2.4963484446154993])
+        target1joint = np.array([3.830038547515869, -1.699723859826559, 2.153346363698141, -2.357183118859762, -1.8035014311419886, -2.433138434086935])
         # target2joint = np.array([3.8441805839538574, -1.508592204456665, 2.0356009642230433, -2.378955980340475, -1.7434089819537562, -2.4464884440051478])
-        target2joint = np.array([3.8236942291259766, -1.469771222477295, 2.03717548051943, -2.422732015649313, -1.7380803267108362, -2.466470781956808])
+        # target2joint = np.array([3.8236942291259766, -1.469771222477295, 2.03717548051943, -2.422732015649313, -1.7380803267108362, -2.466470781956808])
         # target2joint = np.array([3.8618922233581543, -1.3786173623851319, 2.1968749205218714, -2.7827097378172816, -1.8232024351703089, -2.380178991948263])
+        target2joint = np.array([3.767681121826172, -1.524015025501587, 2.229475800191061, -2.6224776707091273, -1.7844813505755823, -2.493746821080343])
         self.rtde_c.moveJ(target1joint, self.vel, self.acc)
         self.rtde_c.moveJ(target2joint, self.vel, self.acc)
         self.gripper.move_and_wait_for_pos(245, 255, 255)

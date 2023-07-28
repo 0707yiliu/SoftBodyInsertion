@@ -22,6 +22,7 @@ target1joint = np.array([2.96539662, -1.57342686,  1.3205609,  -1.31793037, -1.5
 target1joint = np.array([3.14, -1.57, 1.57, -1.57, -1.57, -1.57])
 target1joint = np.array([2.96539662, -1.57342686,  1.3205609,  -1.31793037, -1.57079633,  -1.445])
 target1joint = np.array([2.96690151, -1.60088217,  1.63154722, -1.60144448, -1.57070149, -1.74708013])
+target1joint = np.array([3.8236942291259766, -1.469771222477295, 2.03717548051943, -2.422732015649313, -1.7380803267108362, -2.466470781956808])
 # target1joint = np.array([3.8441805839538574, -1.508592204456665, 2.0356009642230433, -2.378955980340475, -1.7434089819537562, -2.4464884440051478])
 # target1joint = np.array([3.8441805839538574, -1.508592204456665, 2.0356009642230433, -2.378955980340475, -1.7434089819537562, -2.4464884440051478])
 # target1joint = np.array([2.86539662, -1.37342686,  1.5205609,  -1.91793037, -0.87079633,  -0])
@@ -152,7 +153,7 @@ class AprilTag:
         tag_outer_side = 0.91 # distance between the side of tag to outer side
         objoffset = 3
         obj_offset_y = 3.97
-        obj_offset_x = 3
+        obj_offset_x = 3.2
         obj_offset_z = 2.5
         root_z_offset = 1.25
         root_base_x = 14.5
@@ -166,6 +167,7 @@ class AprilTag:
         rootTrootside[0, 3] = ((root_base_x / 2) - (tag_len / 2 + tag_outer_side))
         rootTrootside[1, 3] = (tag_len / 2 + tag_outer_side + root_base_y / 2)
         rootTrootside[2, 3] = root_z_offset
+        objsideTobj[0, 3] = -obj_offset_x
         # objsideTobj[0, 3] = -(tag_len / 2 + tag_outer_side + objoffset)
         objsideTobj[1, 3] = -(tag_len / 2 + tag_outer_side + obj_offset_y)
         objsideTobj[2, 3] = -obj_offset_z

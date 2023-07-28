@@ -3,21 +3,23 @@ import cv2
 
 # image path
 root = "/home/yi/project_ghent/recording/"
-imgs_dir = 'visiontouch4mm0726123714_dsl' # the images root directory, you can modify it to change the images source
-im_dir = root + imgs_dir + "/"
+imgs_dir = 'visiontouch0727174844_real_nodsl' # the images root directory, you can modify it to change the images source
+im_dir = root + imgs_dir + "/jpgsource/"
 # output video path
-save_video_dir = im_dir
+save_video_dir = root + imgs_dir + "/"
 if not os.path.exists(save_video_dir):
     os.makedirs(save_video_dir)
 # set saved fps
 fps = 20
 # get frames list
-frames = sorted(os.listdir(im_dir))
+# frames = sorted(os.listdir(im_dir))
+frames = os.listdir(im_dir)
+frames.sort(key=lambda x:int(x.split('.')[0]))
 # w,h of image
 img = cv2.imread(os.path.join(im_dir, frames[0]))
 img_size = (img.shape[1], img.shape[0])
 # get seq name
-seq_name = os.path.dirname(im_dir).split('/')[-1]
+seq_name = os.path.dirname(save_video_dir).split('/')[-1]
 # splice video_dir
 video_dir = os.path.join(save_video_dir, seq_name + '.mp4')
 fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')

@@ -12,6 +12,14 @@ import matplotlib.pyplot as plt
 import sys, os, math, time
 from scipy.spatial.transform import Rotation as R
 
+
+def mkdir(path):
+    folder = os.path.exists(path)
+    if not folder:
+        os.makedirs(path)
+    else:
+        pass
+
 class AprilTag:
     def __init__(self, rootid=10, objid=6, enable_recording=False, path=None) -> None:
 
@@ -66,11 +74,13 @@ class AprilTag:
         self.tag_len = 3.59
         self.tag_outer_side = 0.91
         self.objoffset = 3
-        obj_offset_y = 3.97
+        obj_offset_x = -3.2
+        obj_offset_y = 3.75
         obj_offset_z = 2.5
         root_z_offset = 1.25
         root_base_x = 14.5
         root_base_y = 12.83
+
 
         self.rootTobj = np.identity(4)
         self.rootTrootside = np.identity(4)
@@ -83,7 +93,7 @@ class AprilTag:
         self.rootTrootside[0, 3] = ((root_base_x / 2) - (self.tag_len / 2 + self.tag_outer_side))
         self.rootTrootside[1, 3] = (self.tag_len / 2 + self.tag_outer_side + root_base_y / 2)
         self.rootTrootside[2, 3] = root_z_offset
-        # objsideTobj[0, 3] = -(tag_len / 2 + tag_outer_side + objoffset)
+        self.objsideTobj[0, 3] = -obj_offset_x
         self.objsideTobj[1, 3] = -(self.tag_len / 2 + self.tag_outer_side + obj_offset_y)
         self.objsideTobj[2, 3] = -obj_offset_z
 
@@ -333,8 +343,9 @@ class AprilTag:
             # print(x, y, z)
 
         if self.enable_record is True:
+            mkdir(self.recording_path + "/jpgsource/")
             self.recording_count += 1
-            filename = str(self.recording_path + str(self.recording_count) + ".jpg")
+            filename = str(self.recording_path + "/jpgsource/" + str(self.recording_count) + ".jpg")
             cv2.imwrite(filename, img)
         # cv2.imshow("camera-image", img)
 

@@ -238,7 +238,7 @@ class PeginHole(Task):
         self.sim.set_mocap_pos(mocap="box", pos=desired_goal)
         ## randomize the rotation of the hole in z-axis direction
         z_deg = (2.0 * np.random.random() + (-1.0)) * 90
-        xy_deg = (2.0 * np.random.random() + (-1.0)) * 5
+        xy_deg = (2.0 * np.random.random() + (-1.0)) * 20
         # for real world test
         if self.real2sim is True:
             xy_deg = (2.0 * np.random.random() + (-1.0)) * 0

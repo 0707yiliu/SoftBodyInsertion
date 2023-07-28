@@ -66,13 +66,17 @@ if args.realrobot is False:
     ft_threshold_rpy = 0.0001  # same as ft_threshold_xyz
     ee_dis_ratio = 0.00085  # the maximum velocity is (ee_dis_ratio*100)m/s in sim and real.
 else:
-    dsl_dampRatio_d = np.array([0.001, 0.001, 0.004])
-    dsl_dampRatio_r = np.array([0.1, 0.1, 0.1])
-    ft_xyz_threshold_ur3 = np.array([3, 3, 4])
-    ft_rpy_threshold_ur3 = np.array([0.5, 0.5, 0.5])
+    dsl_dampRatio_d = np.array([0.001, 0.001, 0.006]) # rigid
+    dsl_dampRatio_r = np.array([0.35, 0.35, 0.2])
+    # dsl_dampRatio_d = np.array([0.005, 0.005, 0.0085]) # red
+    # dsl_dampRatio_r = np.array([0.5, 0.5, 0.3])
+    # dsl_dampRatio_d = np.array([0.006, 0.006, 0.00999])  # red
+    # dsl_dampRatio_r = np.array([0.7, 0.7, 0.2])
+    ft_xyz_threshold_ur3 = np.array([4.5, 4.5, 4])
+    ft_rpy_threshold_ur3 = np.array([0.8, 0.8, 0.5])
     ft_threshold_xyz = 0.3
     ft_threshold_rpy = 0.2
-    ee_dis_ratio = 0.00085
+    ee_dis_ratio = 0.0009
 reward_surface_top_weight = 0.1  # the reward function's weight for the distance between the top of surface and EEF
 reward_surface_mid_weight = 0.15  # same function as reward_surface_top_weight
 reward_surface_bot_weight = 1.5
@@ -127,14 +131,14 @@ def mkdir(path):
 
 if args.d_s_l is False:
     if args.realrobot is False:
-        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + args.hole_size + running_time + "_real_nodsl/"
+        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + running_time + "_nodsl/"
     else:
-        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + args.hole_size + running_time + "_real_dsl/"
+        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + running_time + "_real_nodsl/"
 else:
     if args.realrobot is False:
-        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + args.hole_size + running_time + "_nodsl/"
+        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + running_time + "_dsl/"
     else:
-        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + args.hole_size + running_time + "_dsl/"
+        recording_path = '/home/yi/project_ghent/recording/' + _vision_touch + running_time + "_real_dsl/"
 
 
 
