@@ -32,6 +32,7 @@ ee_pos = np.array([0.30852322, 0.08026293, 0.99192-0.87  ])
 target_orientation = np.array([0, 0, 0.0, 1])
 qpos = urxkdl.inverse(target1joint, ee_pos, target_orientation)
 print("ik qpos:", qpos)
+# exit(0)
 # -----------------------------
 
 

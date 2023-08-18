@@ -7,7 +7,7 @@
 import numpy as np
 
 class FT_controller():
-    def __init__(self, m, b, k, dt) -> None:
+    def __init__(self, m, b, k, dt, tau_m, tau_b, tau_k) -> None:
         self.M = m
         self.B = b
         self.K = k
@@ -15,13 +15,13 @@ class FT_controller():
         self._mat = np.zeros((3, 3))
         self.T_mat = np.zeros((3, 3))
 
-        self.TM = 1
-        self.TB = 8
-        self.TK = 40
+        self.TM = tau_m
+        self.TB = tau_b
+        self.TK = tau_k
 
     def admittance_control(self, desired_position, desired_rotation,
                            FT_data, 
-                           params_mat, paramsT_mat) -> np.ndarray:
+                           params_mat, paramsT_mat) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         F_x = FT_data[0]
         F_y = FT_data[1]
         F_z = FT_data[2]
@@ -57,7 +57,7 @@ class FT_controller():
         z_e_d = self.dt * dz_e_d + z_e
 
         # position_offset = np.array([0, 0, 0])
-        position_offset = np.array([x_e_d, y_e_d, z_e_d])
+        position_offset = np.array([x_e_d*0.1, y_e_d*0.1, z_e_d])
         # print("---", F_z, ddz_e, dz_e, z_e, ddz_e_d, dz_e_d, z_e_d)
         
         position_d = position_offset + desired_position
@@ -85,7 +85,7 @@ class FT_controller():
         dTz_e_d = self.dt * ddTz_e_d + dTz_e
         Tz_e_d = self.dt * dTz_e_d + Tz_e
 
-        rotation_offset = np.array([-Tx_e_d, -Ty_e_d, Tz_e_d])
+        rotation_offset = np.array([Tx_e_d, Ty_e_d, Tz_e_d]) * 0.1
         rotation_d = rotation_offset + desired_rotation
         # print("rotation_offset:", rotation_offset)
         # print("rotation_d:", rotation_d)

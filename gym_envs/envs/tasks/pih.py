@@ -144,9 +144,9 @@ class PeginHole(Task):
             hole_top_position = np.copy(self.sim.get_site_position("hole_top"))
             hole_bot_position = np.copy(self.sim.get_site_position("hole_bottom"))
             if self.real2sim is False:
-                hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.0035
-                hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.0035
-                hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.0035
+                hole_top_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.006
+                hole_top_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.006
+                hole_top_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.004
 
                 hole_bot_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.008
                 hole_bot_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.008
@@ -167,12 +167,15 @@ class PeginHole(Task):
             # 0.8867685231006206
             return obs
         else:
-            hole_y_offset = 0
-            hole_x_offset = 0
-            hole_z_offset = 0.87 # use the same range with sim, compensate the fixed high of table in simulation.
+            hole_y_offset = (2.0 * np.random.random() + (-1.0)) * 0.003
+            hole_x_offset = (2.0 * np.random.random() + (-1.0)) * 0.003
+            hole_z_offset = 0.87 + (2.0 * np.random.random() + (-1.0)) * 0.001 # use the same range with sim, compensate the fixed high of table in simulation.
             hole_position = np.array([self.TransferX + hole_x_offset,
                                       self.TransferY + hole_y_offset,
                                       self.TransferZ + hole_z_offset])
+            # hole_position[0] += (2.0 * np.random.random() + (-1.0)) * 0.003
+            # hole_position[1] += (2.0 * np.random.random() + (-1.0)) * 0.003
+            # hole_position[2] += (2.0 * np.random.random() + (-1.0)) * 0.001
             print("hole pos:", hole_position)
             print("hole pos (raw):", self.TransferZ)
             if self._normalize_obs is True:
@@ -238,7 +241,7 @@ class PeginHole(Task):
         self.sim.set_mocap_pos(mocap="box", pos=desired_goal)
         ## randomize the rotation of the hole in z-axis direction
         z_deg = (2.0 * np.random.random() + (-1.0)) * 90
-        xy_deg = (2.0 * np.random.random() + (-1.0)) * 20
+        xy_deg = (2.0 * np.random.random() + (-1.0)) * 0
         # for real world test
         if self.real2sim is True:
             xy_deg = (2.0 * np.random.random() + (-1.0)) * 0

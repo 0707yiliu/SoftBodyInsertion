@@ -3,7 +3,7 @@ import cv2
 
 # image path
 root = "/home/yi/project_ghent/recording/"
-imgs_dir = 'visiontouch0727174844_real_nodsl' # the images root directory, you can modify it to change the images source
+imgs_dir = 'visiontouch0807135502_real_nodsl' # the images root directory, you can modify it to change the images source
 im_dir = root + imgs_dir + "/jpgsource/"
 # output video path
 save_video_dir = root + imgs_dir + "/"

@@ -74,7 +74,7 @@ class AprilTag:
         self.tag_len = 3.59
         self.tag_outer_side = 0.91
         self.objoffset = 3
-        obj_offset_x = -3.2
+        obj_offset_x = 0.75
         obj_offset_y = 3.75
         obj_offset_z = 2.5
         root_z_offset = 1.25

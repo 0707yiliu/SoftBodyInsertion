@@ -49,6 +49,7 @@ parser.add_argument('-dr', '--domain_randomization', action='store_true',
                     help='execte the model with domain randomization')
 parser.add_argument('-g', '--ur_gen', type=int, default=5, help='the generation of URx (3/5/...)')
 parser.add_argument('-ro', '--record_obs', action='store_true', help='recording the observation in real/sim.')
+parser.add_argument('-ac', '--admittance_control', action='store_true', help='enable admittance controller.')
 
 args = parser.parse_args()
 
@@ -64,19 +65,19 @@ if args.realrobot is False:
     ft_rpy_threshold_ur3 = np.array([0.001, 0.001, 0.001])  # threshold of F/T sensor in rpy normalization
     ft_threshold_xyz = 0.0001  # threshold of F/T sensor for clipping
     ft_threshold_rpy = 0.0001  # same as ft_threshold_xyz
-    ee_dis_ratio = 0.00085  # the maximum velocity is (ee_dis_ratio*100)m/s in sim and real.
+    ee_dis_ratio = 0.0007 # the maximum velocity is (ee_dis_ratio*100)m/s in sim and real.
 else:
-    dsl_dampRatio_d = np.array([0.001, 0.001, 0.006]) # rigid
-    dsl_dampRatio_r = np.array([0.35, 0.35, 0.2])
+    # dsl_dampRatio_d = np.array([0.001, 0.001, 0.006]) # rigid
+    # dsl_dampRatio_r = np.array([0.35, 0.35, 0.2])
     # dsl_dampRatio_d = np.array([0.005, 0.005, 0.0085]) # red
     # dsl_dampRatio_r = np.array([0.5, 0.5, 0.3])
-    # dsl_dampRatio_d = np.array([0.006, 0.006, 0.00999])  # red
-    # dsl_dampRatio_r = np.array([0.7, 0.7, 0.2])
+    dsl_dampRatio_d = np.array([0.008, 0.008, 0.015])  # wire
+    dsl_dampRatio_r = np.array([0.7, 0.7, 0.2])
     ft_xyz_threshold_ur3 = np.array([4.5, 4.5, 4])
     ft_rpy_threshold_ur3 = np.array([0.8, 0.8, 0.5])
     ft_threshold_xyz = 0.3
     ft_threshold_rpy = 0.2
-    ee_dis_ratio = 0.0009
+    ee_dis_ratio = 0.0015
 reward_surface_top_weight = 0.1  # the reward function's weight for the distance between the top of surface and EEF
 reward_surface_mid_weight = 0.15  # same function as reward_surface_top_weight
 reward_surface_bot_weight = 1.5
@@ -187,6 +188,7 @@ for i in range(1):
                 ee_dis_ratio=ee_dis_ratio,
                 enable_record=args.record_obs,
                 recording_path=recording_path,
+                admittance_control=args.admittance_control,
                 reward_surface_weight=np.array(
                     [reward_surface_top_weight, reward_surface_bot_weight, reward_surface_mid_weight]),
             )
@@ -246,6 +248,7 @@ for i in range(1):
             ee_dis_ratio=ee_dis_ratio,
             enable_record=args.record_obs,
             recording_path=recording_path,
+            admittance_control=args.admittance_control,
             reward_surface_weight=np.array(
                 [reward_surface_top_weight, reward_surface_bot_weight, reward_surface_mid_weight]),
         )
@@ -350,6 +353,7 @@ for i in range(1):
             ee_dis_ratio=ee_dis_ratio,
             enable_record=args.record_obs,
             recording_path=recording_path,
+            admittance_control=args.admittance_control,
             reward_surface_weight=np.array(
                 [reward_surface_top_weight, reward_surface_bot_weight, reward_surface_mid_weight]),
         )
@@ -404,6 +408,7 @@ for i in range(1):
             ee_dis_ratio=ee_dis_ratio,
             enable_record=args.record_obs,
             recording_path=recording_path,
+            admittance_control=args.admittance_control,
             reward_surface_weight=np.array(
                 [reward_surface_top_weight, reward_surface_bot_weight, reward_surface_mid_weight]),
         )

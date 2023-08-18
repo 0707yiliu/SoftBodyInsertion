@@ -37,6 +37,7 @@ class URPeginHoleEnv(RobotTaskEnv):
         ee_dis_ratio: float = 0.00085,
         enable_record: bool = False,
         recording_path: str = "nopath",
+        admittance_control: bool = False,
         ) -> None:
         # print("--------")
         sim = Mujoco_Func(
@@ -66,6 +67,7 @@ class URPeginHoleEnv(RobotTaskEnv):
             ft_threshold_xyz=ft_threshold_xyz,
             ft_threshold_rpy=ft_threshold_rpy,
             ee_dis_ratio=ee_dis_ratio,
+            ee_admittancecontrol=admittance_control,
             )
         task = PeginHole(
             sim=sim,

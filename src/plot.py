@@ -253,11 +253,11 @@ import matplotlib.pyplot as plt
 from scipy import signal
 
 root = "/home/yi/project_ghent/recording/"
-datas_dir_sim = 'visiontouch0727095454_nodsl'
-datas_dir_real = 'visiontouch0727172102_real_dsl'
+datas_dir_sim = 'visiontouch0807134725_nodsl'
+datas_dir_real = 'visiontouch0807140126_real_nodsl'
 data_dirsim = root + datas_dir_sim + "/"
 datas_dir_real = root + datas_dir_real + "/"
-obs_file_name = data_dirsim + '10.npy'
+obs_file_name = data_dirsim + '0.npy'
 obs_file_name_real = datas_dir_real + 'realworld.npy'
 obs_real = np.load(obs_file_name_real)
 obs = np.load(obs_file_name)
@@ -267,14 +267,16 @@ obs_touch_shape = obs.shape
 obs_real_shape = obs_real.shape
 # for i in range(obs_real_shape[1]):
 # 	obs[:, i] = FirstOrderLag(obs[:, i], 0.99)
-oba_size = 8
-wn = 5*5/250 # 截止频率2Hz,采样频率1000Hz
+# --------------- filter -----------
+oba_size = 14
+wn = 2*5/500 # 截止频率2Hz,采样频率1000Hz
 b,a = signal.butter(4,wn,'low')
 obs_real[:, oba_size] = signal.filtfilt(b,a,obs_real[:, oba_size])
 obs[:, oba_size] = signal.filtfilt(b,a,obs[:, oba_size])
 for i in range(oba_size):
     obs_real[:, i] = signal.filtfilt(b, a, obs_real[:, i])
     obs[:, i] = signal.filtfilt(b,a,obs[:, i])
+# ----------------------------------
 
 
 print(obs_touch_shape)
@@ -286,10 +288,12 @@ for plt_index in range(obs_touch_shape[1]):
         plt.plot(np.linspace(0, obs_touch_shape[0]-1, obs_touch_shape[0]), obs[:, plt_index], label="sim")
         plt.plot(np.linspace(0, obs_real_shape[0]-1, obs_real_shape[0]), obs_real[:, plt_index], label="real")
         plt.ylim(-y_range, y_range)
+        # plt.xlim(3200, 3600)
     else:
         plt.plot(np.linspace(0, obs_touch_shape[0]-1, obs_touch_shape[0]), obs[:, plt_index], label="sim")
         plt.plot(np.linspace(0, obs_real_shape[0]-1, obs_real_shape[0]), obs_real[:, plt_index], label="real")
         plt.ylim(-y_range, y_range)
+        # plt.xlim(3200, 3600)
 plt.legend()
 # # for rendering force with vision model
 # obs_file_name_real = '0724144457force_nodsl_.npy'

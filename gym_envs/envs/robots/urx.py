@@ -6,7 +6,7 @@
 
 from array import array
 from email.mime import base
-from typing import Optional
+from typing import Optional, Tuple, Any
 
 import numpy as np
 import math
@@ -76,9 +76,25 @@ class UR(MujocoRobot):
         ft_threshold_xyz: float = 0.3,
         ft_threshold_rpy: float = 0.2,
         ro: bool = True,
+        ee_admittancecontrol: bool = True,
     ) -> None:
+        # admittance control params ---
+        self.ee_admittancecontrol = ee_admittancecontrol
+        if self.ee_admittancecontrol is True:
+            self._mat = np.zeros((3, 3))
+            self.T_mat = np.zeros((3, 3))
+            if real_robot is True:
+                self.admittance_controller = FT_controller(m=0.5, b=500, k=1000,
+                                                           dt=1 / 500,
+                                                           tau_m=0.3, tau_b=4, tau_k=8)
+            else:
+                self.admittance_controller = FT_controller(m=0.4, b=200, k=400,
+                                                           dt=1 / 500,
+                                                           tau_m=0.4, tau_b=4, tau_k=8)
+            self.admittance_params = np.zeros((3, 3))
+            self.admittance_paramsT = np.zeros((3, 3))
+        # -----------
         self.running_time = datetime.now().strftime("%m%d%H%M%S")
-
         self.ro = ro
         self.dsl_dampRatio_d = dsl_dampRatio_d
         self.dsl_dampRatio_r = dsl_dampRatio_r
@@ -339,6 +355,12 @@ class UR(MujocoRobot):
             # target_ee_pos = np.array([0.309, 0.08, 0.12192+0.87])
             # # self.y_rot += 0.00005
             # target_ee_quat = np.array([0.0, 0.0, 0.0, 1])
+            if self.ee_admittancecontrol is True:
+                # print("admittance control is True")
+                target_ee_rot = target_ee_rot * self.d2r
+                target_ee_pos, target_ee_rot = self.AdmittanceController(desired_pos=target_ee_pos, desired_rot=target_ee_rot)
+                target_ee_rot = target_ee_rot / self.d2r
+                target_ee_quat = R.from_euler('xyz', target_ee_rot, degrees=True).as_quat()
             target_arm_angles = self.inverse_kinematics(
                     current_joint=current_joint, 
                     target_position=target_ee_pos, 
@@ -367,7 +389,7 @@ class UR(MujocoRobot):
                 ee_dis_x = math.tanh(3 * current_ft[0]/10)
                 ee_dis_y = -math.tanh(3 * current_ft[1]/10)
                 ee_dis_z = math.tanh(3 * current_ft[2]/10)
-                ee_dis_rx = math.tanh(10 * current_ft[3])
+                ee_dis_rx = -math.tanh(10 * current_ft[3])
                 ee_dis_ry = math.tanh(10 * current_ft[4])
                 ee_dis_rz = -math.tanh(10 * current_ft[5])
                 dsl_ee_dis = np.array([ee_dis_x, ee_dis_y, ee_dis_z, ee_dis_rx, ee_dis_ry, ee_dis_rz])
@@ -408,6 +430,13 @@ class UR(MujocoRobot):
             # target_ee_pos = np.array([0.309, 0.0801, 0.1817])
             # # self.y_rot += 0.00005
             # target_ee_quat = np.array([-3.2737539930006814e-05, 1.9495431819390594e-05, -0.15118763521715797, 0.9885050821850261])
+            if self.ee_admittancecontrol is True:
+                target_ee_rot = target_ee_rot * self.d2r
+                target_ee_pos, target_ee_rot = self.AdmittanceController(desired_pos=target_ee_pos,
+                                                                         desired_rot=target_ee_rot)
+                target_ee_rot = target_ee_rot / self.d2r
+                target_ee_quat = R.from_euler('xyz', target_ee_rot, degrees=True).as_quat()
+
             target_arm_angles = self.inverse_kinematics(
                     current_joint=self.rtde_r.getActualQ(),
                     target_position=target_ee_pos,
@@ -503,12 +532,16 @@ class UR(MujocoRobot):
         self.set_joint_neutral()
         self.ft_last = np.array([0, 0, 0, 0, 0, 0])
         self.ft_last_obs = np.array([0, 0, 0, 0, 0, 0])
+        self.init_ft_sensor = self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor")
+        if self.ee_admittancecontrol is True:
+            self._mat = np.zeros((3, 3))
+            self.T_mat = np.zeros((3, 3))
         if self.real_robot is True:
             _items = 1000
             ft_record = np.zeros((_items, 6))
             acc_record = np.zeros((_items, 3))
             print("reset real robot pos and init the grasping for insertion.")
-            self._init_grasping_for_realRobot() # grasping program, comment out this code when debugging
+            # self._init_grasping_for_realRobot() # grasping program, comment out this code when debugging
             print("moveing ee to init pos ...")
             time.sleep(1)
             self.rtde_c.moveJ(self.j_init, self.vel, self.acc)
@@ -527,11 +560,94 @@ class UR(MujocoRobot):
             print("init over.")
             self._reset = True
             time.sleep(1)
+
             # while True:
             #     print(self.rtde_r.getActualTCPForce() - self.real_init_ft_sensor)
             #     time.sleep(0.01)
             #     pass
+            init_acc = np.mean(acc_record, axis=0)
+            self.AdmittanceControlLoop(init_acc=init_acc)
 
+    def AdmittanceController(self, desired_pos, desired_rot) -> tuple[np.ndarray, np.ndarray]:
+        desired_position = desired_pos
+        desired_rotation = desired_rot
+        # controller loop
+        if self.real_robot is False:
+            print("init ft:", self.init_ft_sensor)
+            current_FT = self.sim.get_ft_sensor(force_site="ee_force_sensor", torque_site="ee_torque_sensor") - self.init_ft_sensor
+        else:
+            current_FT = self.rtde_r.getActualTCPForce() - self.real_init_ft_sensor
+        updated_pos, update_rotation, self._mat, self.T_mat = self.admittance_controller.admittance_control(desired_position,
+                                                                                                  desired_rotation,
+                                                                                                  current_FT,
+                                                                                                  self._mat,
+                                                                                                  self.T_mat)
+        return updated_pos, update_rotation
+
+
+    def AdmittanceControlLoop(self, init_acc):
+        desired_position = self.rtde_r.getActualTCPPose()[:3]
+        ee_jpos_current = np.array(self.rtde_r.getActualQ())[-1]
+        ee_jpos_target = ee_jpos_current / self.d2r
+        target_z_rot = np.clip(ee_jpos_target, self.z_rot_low, self.z_rot_high)
+        desired_rotation = np.array([-180 * self.d2r, 0, target_z_rot * self.d2r])
+        init_vel = self.rtde_r.getActualTCPSpeed()[:3]
+        ik_pos = np.zeros(3)
+        _mat = np.zeros((3, 3))
+        T_mat = np.zeros((3, 3))
+        items = 5
+        i = 0
+        ft_record = [np.zeros(6)]
+        current_joint = np.array(self.rtde_r.getActualQ())
+        current_ee_pos_from_urdf, current_ee_quat = self.forward_kinematics(qpos=current_joint)
+        desired_rotation = quaternion_to_euler(current_ee_quat[0],
+                                             current_ee_quat[1],
+                                             current_ee_quat[2],
+                                             current_ee_quat[3])
+        while True:
+            i += 1
+            current_joint = np.array(self.rtde_r.getActualQ())
+            current_ee_pos_from_urdf, current_ee_quat = self.forward_kinematics(qpos=current_joint)
+
+
+            current_FT = self.rtde_r.getActualTCPForce()
+            FT_data = current_FT - self.real_init_ft_sensor
+            # print("FT data:", FT_data)
+            # print("current pos:", current_ee_pos_from_urdf)
+            # print("current rot:", desired_rotation)
+            # print("current quat:", R.from_euler('xyz', desired_rotation, degrees=True).as_quat())
+            ft_record = np.r_[ft_record, [-FT_data]]
+            # updated_pos, update_rotation, _mat, T_mat = self.admittance_controller.admittance_control(desired_position,
+            #                                                                                           desired_rotation,
+            #                                                                                           FT_data,
+            #                                                                                           _mat,
+            #                                                                                           T_mat)
+            updated_pos, update_rotation = self.AdmittanceController(desired_pos=desired_position,desired_rot=desired_rotation)
+            updated_pos = np.around(updated_pos, 5)
+            update_rotation = update_rotation / self.d2r
+            # print("update pos:", updated_pos)
+            print("update rot:", update_rotation)
+            # print("update quat:",  R.from_euler('xyz', update_rotation, degrees=True).as_quat())
+
+            ee_jpos_current = np.array(self.rtde_r.getActualQ())[-1]
+            ee_jpos_target = ee_jpos_current / self.d2r
+            target_z_rot = np.clip(ee_jpos_target, self.z_rot_low, self.z_rot_high)
+            target_quat = R.from_euler('xyz', update_rotation, degrees=True).as_quat()
+            current_joint = np.array(self.rtde_r.getActualQ())
+            target_arm_angles = self.inverse_kinematics(
+                    current_joint=current_joint,
+                    target_position=updated_pos,
+                    target_orientation=target_quat
+                )
+            # print("target_arm_angles", target_arm_angles)
+            # print("moved pos and quat:", self.forward_kinematics(qpos=target_arm_angles))
+            # print("----------")
+
+            self.real_joint_planner(grasping=True,
+                                    _time=self.planner_time/50,
+                                    current_joint=current_joint,
+                                    target_joint=target_arm_angles)
+            time.sleep(0.01)
 
     def log_info(self, gripper):
         print(f"Pos: {str(gripper.get_current_position()): >3}  "
