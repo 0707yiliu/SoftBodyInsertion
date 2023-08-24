@@ -102,6 +102,7 @@ def init_ani():
             line[item].set_data([],[])
 
 def animate(i):
+    print(i)
     # # ax.clear()
     # plt.cla()
     for j in range(num_set):
