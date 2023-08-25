@@ -67,6 +67,6 @@ ex. [@DomPizzie](https://twitter.com/dompizzie) -->
 * 0.1
     * Initial Release
 
-## License
+<!-- ## License
 
-Distributed under the MIT License.
+Distributed under the MIT License. -->
