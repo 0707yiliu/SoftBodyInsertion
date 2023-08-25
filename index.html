@@ -204,8 +204,8 @@
 
     </div>
     <!-- Trainning. -->
-    <div class="columns">
-      <div class="content">
+    <div class="hero-body">
+      <div class="container">
         <h2 class="title is-3">Trainning in Simulation</h2>
         <p>
           Trainning performance. 
@@ -217,9 +217,9 @@
         </div>
       </div>
     </div>
-
-    <div class="columns">
-      <div class="content">
+    <!-- DR pos. -->
+    <div class="hero-body">
+      <div class="container">
         <h2 class="title is-3">Domain randomization for hole position</h2>
         <p>
           Perform domain randomization on the observation at hole locations. We use the same hole and the same object to test.
@@ -230,8 +230,49 @@
                  muted
                  preload
                  playsinline
-                 width="100%">
+                 width="70%">
             <source src="static/videos/dr_pos.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+    <!-- DR soft body. -->
+    <div class="hero-body">
+      <div class="container">
+        <h2 class="title is-3">Domain randomization for soft bodies</h2>
+        <p>
+          Perform domain randomization on the soft bodies, which contains the soft body's stiffness and damping. 
+          We test the soft bodies with different deformation intensities.
+        </p>
+        <div class="content has-text-centered">
+          <video id="replay-video"
+                 controls
+                 muted
+                 preload
+                 playsinline
+                 width="70%">
+            <source src="static/videos/dr_soft_plat.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+    <!-- DR soft body. -->
+    <div class="hero-body">
+      <div class="container">
+        <h2 class="title is-3">Insertion task with soft bodies</h2>
+        <p>
+          You can see here how different holes are inserted with different objects.
+        </p>
+        <div class="content has-text-centered">
+          <video id="replay-video"
+                 controls
+                 muted
+                 preload
+                 playsinline
+                 width="70%">
+            <source src="static/videos/fullDSLassembly.mp4"
                     type="video/mp4">
           </video>
         </div>
@@ -250,9 +291,7 @@
       <h2 class="title is-3">Demo for ICRA 2023 workshop (shape maching with rigid body)</h2>
       <div class="columns is-centered has-text-centered">
         <div class="column is-four-fifths">
-          
           <div class="publication-video">
-
             <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/1npPWYU3B6g?si=qlBr192itc_eW5o8&amp;controls=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>          
           </div>
         </div>
