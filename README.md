@@ -2,6 +2,8 @@
 
 This project provides diff models to complete the assembly tasks (peg-in-hole) in soft body and rigid body environmnets. The RL-PPO algorithm is mainly used in this project and the task for rigid body environment is completed (the policy includes hole seaching, shape matching, insertion). Next step is trying to use soft body (soft tool) to complete the insertion task.
 
+Details and demos: [https://0707yiliu.github.io/peg-in-hole-with-RL/](https://0707yiliu.github.io/peg-in-hole-with-RL/)
+
 
 # Env Requstion
 
