@@ -66,7 +66,7 @@
                   </div>
 
                   <div class="is-size-5 publication-authors">
-                    <span class="author-block">Ghent University, imec<br>ICRA 2023 workshop</span>
+                    <span class="author-block">Ghent University, imec<br>ICRA 2023 workshop (this paper focuses on shape maching with rigid body)</span>
                     <span class="eql-cntrb"><small><br><sup>*</sup>Corresponding Author</small></span>
                     <span class="eql-cntrb"><small><br>Aug 25, 2023</small></span>
                   </div>
@@ -178,8 +178,10 @@
         <div class="content">
           <h2 class="title is-3">Overview</h2>
           <p>
-            Using <i>nerfies</i> you can create fun visual effects. This Dolly zoom effect
-            would be impossible without nerfies since it would require going through a wall.
+            The overview of the robotics soft bodies insertion policy.
+            We use the MUJOCO as the simulator to build up the whole sim-environment, which contains the hole, soft objects and manipulator.
+            The RL model provides the policy <math><mi>&pi;</mi></math> to the robot, which contians the domain randomization method.
+            We test different holes and soft bodies in the real world to demonstrate the effectiveness of the RL model.
           </p>
           <img src="static/images/framework.jpg" alt="MY ALT TEXT"/>
         </div>
@@ -192,8 +194,10 @@
         <div class="columns is-centered">
           <div class="column content">
             <p>
-              As a byproduct of our method, we can also solve the matting problem by ignoring
-              samples that fall outside of a bounding box during rendering.
+              Network structure of robot insertion models. 
+              The entire network is divided into three parts, the environment, the agent network, and the dynamic safety lock (DSL).
+              DSL dynamically compensates the movement of the end of the robot, 
+              and the degree of compensation depends on the magnitude of the force feedback and the magnitude of the gain.
             </p>
             <img src="static/images/network.jpg" alt="MY ALT TEXT"/>
           </div>
@@ -253,7 +257,7 @@
   <div class="hero-body">
     <div class="container">
       <!-- Paper video. -->
-      <h2 class="title is-3">Demo for ICRA 2023 workshop</h2>
+      <h2 class="title is-3">Demo for ICRA 2023 workshop (shape maching with rigid body)</h2>
       <div class="columns is-centered has-text-centered">
         <div class="column is-four-fifths">
           
