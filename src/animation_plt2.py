@@ -17,22 +17,27 @@ ylabels_vision_touch = ["EEF-x", "EEF-y", "EEF-z", "EEF-rx", "EEF-ry", "EEF-rz",
                         "F-x", "F-y", "F-z", "tau-x", "tau-y", "tau-z"]
 # color_set = ["deepskyblue", "royalblue", "gold", "springgreen", "green", "darkgrey", "darksalmon", "red", "black", "chocolate", "magenta", "darkorange"]
 color_set = ["green", "red", "blue"] # for assembly
+color_set = ["lightgreen", "lime", "limegreen", "forestgreen", "green", "darkgreen",
+             "paleturquoise", "cyan", "skyblue", "deepskyblue", "dodgerblue", "steelblue"]
+
+color_set = ["#D5FFE4", "#8BE8E5", "#A084E8", "#4477CE", "#512B81", "#35155D",
+             "#FFD9B7", "#7EAA92", "#9ED2BE", "#C8E4B2", "#FFC6AC", "#F8DE22"]
 fig, ax = plt.subplots(row, col, figsize=(w, h))
-# data_list = [
-#              "visiontouch0805170118_real_dsl",
-#              "visiontouch0805173028_real_dsl",
-#              "visiontouch0805173211_real_dsl",
-#              "visiontouch0805173329_real_dsl",
-#              "visiontouch0805173427_real_dsl",
-#              "visiontouch0807135502_real_nodsl",
-#              #
-#              "visiontouch0805170426_real_dsl",
-#              "visiontouch0805173752_real_dsl",
-#              "visiontouch0805173854_real_dsl",
-#              "visiontouch0805173944_real_dsl",
-#              "visiontouch0727162142_real_dsl",
-#              "visiontouch0727162254_real_dsl"
-#              ] # for exait
+data_list = [
+             "visiontouch0805170118_real_dsl",
+             "visiontouch0805173028_real_dsl",
+             "visiontouch0805173211_real_dsl",
+             "visiontouch0805173329_real_dsl",
+             "visiontouch0805173427_real_dsl",
+             "visiontouch0807135502_real_nodsl",
+             #
+             "visiontouch0805170426_real_dsl",
+             "visiontouch0805173752_real_dsl",
+             "visiontouch0805173854_real_dsl",
+             "visiontouch0805173944_real_dsl",
+             "visiontouch0727162142_real_dsl",
+             "visiontouch0727162254_real_dsl"
+             ] # for exait
 
 # data_list = [
 #             "visiontouch0727170639_real_dsl",
@@ -51,25 +56,25 @@ fig, ax = plt.subplots(row, col, figsize=(w, h))
 #
 # ] # for softbody DR
 
-data_list = [
-    "visiontouch0727174741_real_nodsl",
-    "visiontouch0727162030_real_dsl",
-    "visiontouch0727162254_real_dsl"
-]
+# data_list = [
+#     "visiontouch0727174741_real_nodsl",
+#     "visiontouch0727162030_real_dsl",
+#     "visiontouch0727162254_real_dsl"
+# ]
 
-# data_list = ["visiontouch0727170639_real_dsl",
-#              "visiontouch0727171016_real_dsl",
-#              "visiontouch0805160920_real_dsl",
-#              "visiontouch0805165327_real_dsl",
-#              "visiontouch0805173028_real_dsl",
-#              "visiontouch0805174415_real_dsl",
-#              "visiontouch0727170801_real_dsl",
-#              "visiontouch0727170906_real_dsl",
-#              "visiontouch0805150608_real_dsl",
-#              "visiontouch0805150952_real_dsl",
-#              "visiontouch0805172844_real_dsl",
-#              "visiontouch0807140126_real_nodsl"
-#              ] # for DR
+data_list = ["visiontouch0727170639_real_dsl",
+             "visiontouch0727171016_real_dsl",
+             "visiontouch0805160920_real_dsl",
+             "visiontouch0805165327_real_dsl",
+             "visiontouch0805173028_real_dsl",
+             "visiontouch0805174415_real_dsl",
+             "visiontouch0727170801_real_dsl",
+             "visiontouch0727170906_real_dsl",
+             "visiontouch0805150608_real_dsl",
+             "visiontouch0805150952_real_dsl",
+             "visiontouch0805172844_real_dsl",
+             "visiontouch0807140126_real_nodsl"
+             ] # for DR
 exp_video = "hole1"
 tool_num = len(data_list)
 root = "/home/yi/project_ghent/recording/"
@@ -128,41 +133,41 @@ for j in range(num_set):
     print(data_len)
     if data_len > max_len:
         max_len = data_len
-# for j in range(num_set):
-#     # datasets
-#     data_dir = root + data_list[j] + "/" + 'realworld.npy'
-#     obs = np.load(data_dir)
-#     data_len = len(obs)
-#     print(data_len)
-#     if data_len > max_len:
-#         max_len = data_len
-#     for i in range(obs.shape[1]):
-#         obs[:, i] = signal.filtfilt(b, a, obs[:, i])
-#     for k in range(num_line):
-#         # 12 types of data in each dataset
-#         if k <= 5:
-#             x = k
-#             y = 0
-#         else:
-#             x = k - 6
-#             y = 1
-#         # ax[x][y].clear()
-#         item = k + j * num_line
-#
-#         # line[item], = ax[x,y].plot(np.linspace(0, max_len - 1, max_len), obs_buffer[j, :, k], color=color_set[j])
-#         line[item], = ax[x, y].plot(np.linspace(0, data_len - 1, data_len), obs[:, k])
-#         ax[x, y].set_ylabel(ylabels_vision_touch[k])
-#         ax[x, y].spines['top'].set_visible(False)
-#         ax[x, y].spines['right'].set_visible(False)
-#         # print((j+1)*(k+1)-1)
-#         # ydata[j, i, k] = np.copy(obs[j, i, k])
-#         if k == 5 or k == 11:
-#             ax[x, y].set_xlabel("Step")
-#         if k == 2 or k == 3 or k == 4 or k == 5 or k == 6 or k == 7:
-#             ax[x, y].set_xlabel("Step")
-#             ax[x, y].set_ylim([-1.2, 1.2])
-#         else:
-#             ax[x, y].set_ylim([-1.2, 1.2])
+for j in range(num_set):
+    # datasets
+    data_dir = root + data_list[j] + "/" + 'realworld.npy'
+    obs = np.load(data_dir)
+    data_len = len(obs)
+    print(data_len)
+    if data_len > max_len:
+        max_len = data_len
+    for i in range(obs.shape[1]):
+        obs[:, i] = signal.filtfilt(b, a, obs[:, i])
+    for k in range(num_line):
+        # 12 types of data in each dataset
+        if k <= 5:
+            x = k
+            y = 0
+        else:
+            x = k - 6
+            y = 1
+        # ax[x][y].clear()
+        item = k + j * num_line
+
+        # line[item], = ax[x,y].plot(np.linspace(0, max_len - 1, max_len), obs_buffer[j, :, k], color=color_set[j])
+        line[item], = ax[x, y].plot(np.linspace(0, data_len - 1, data_len), obs[:, k], color=color_set[j], linewidth=2.5)
+        ax[x, y].set_ylabel(ylabels_vision_touch[k])
+        ax[x, y].spines['top'].set_visible(False)
+        ax[x, y].spines['right'].set_visible(False)
+        # print((j+1)*(k+1)-1)
+        # ydata[j, i, k] = np.copy(obs[j, i, k])
+        if k == 5 or k == 11:
+            ax[x, y].set_xlabel("Step")
+        if k == 2 or k == 3 or k == 4 or k == 5 or k == 6 or k == 7:
+            ax[x, y].set_xlabel("Step")
+            ax[x, y].set_ylim([-1.2, 1.2])
+        else:
+            ax[x, y].set_ylim([-1.2, 1.2])
 
 
 def init_ani():
@@ -265,13 +270,13 @@ def animate(i):
     return line
 
 #
-ani = animation.FuncAnimation(
-                            fig=fig,
-                            func=animate,
-                            frames=np.linspace(0 ,max_len-1, max_len),
-                            init_func=init_ani,
-                            interval=100,
-                            blit=True)
-ani.save(exp_video + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# ani = animation.FuncAnimation(
+#                             fig=fig,
+#                             func=animate,
+#                             frames=np.linspace(0 ,max_len-1, max_len),
+#                             init_func=init_ani,
+#                             interval=100,
+#                             blit=True)
+# ani.save(exp_video + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
 plt.show()
