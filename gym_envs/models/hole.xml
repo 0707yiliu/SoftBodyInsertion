@@ -19,7 +19,7 @@ Control Engineering / Automation Engineering
     </asset>
 
     <worldbody>
-        <camera mode="trackcom" target="box" pos="1 0.25 1.88" axisangle="0 0.5 1.4 3.1415927"/>
+        <camera mode="trackcom" target="box" pos="0.01 0.25 1.99" axisangle="0 0.5 1.4 3.1415927"/>
         <body mocap="true" name="box" pos="-0.41 -0.45 0.85" quat="0.7071068 0 -0.7071068 0 ">
         <!-- <body mocap="true" name="box" pos="0.1 0.4 0.9" quat="0.9659258 0 0.258819 0 ">  -->
             <body name="object">
