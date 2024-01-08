@@ -20,11 +20,11 @@ python /your/repo/root/src/run.py  -e URPiHDense-v1 -t 7000000 -a PPO -v vision-
 
 ### Dependencies
 
-* gym >= 2.1
+* gym >= 0.21.0
 * Mujoco >= 2.3
 * Python >= 3.7
 * KDL-pkg
-* ...
+* stable-baselines3==1.6.2
 
 <!-- # Rigid body assembly
 
