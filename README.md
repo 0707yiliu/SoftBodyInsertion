@@ -24,7 +24,7 @@ python /your/repo/root/src/run.py  -e URPiHDense-v1 -t 7000000 -a PPO -v vision-
 * Mujoco >= 2.3
 * Python >= 3.7
 * KDL-pkg
-* stable-baselines3==1.6.2
+* stable-baselines3==1.7.0
 
 <!-- # Rigid body assembly
 

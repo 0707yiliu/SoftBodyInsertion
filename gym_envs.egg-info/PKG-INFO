@@ -7,7 +7,19 @@ Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
+Requires-Dist: gym<=0.23,>=0.22
+Requires-Dist: gym-robotics
+Requires-Dist: numpy
+Requires-Dist: scipy
 Provides-Extra: tests
+Requires-Dist: pytest-cov; extra == "tests"
 Provides-Extra: codestyle
+Requires-Dist: black; extra == "codestyle"
+Requires-Dist: isort; extra == "codestyle"
+Requires-Dist: pytype; extra == "codestyle"
 Provides-Extra: docs
+Requires-Dist: sphinx; extra == "docs"
+Requires-Dist: sphinx-rtd-theme; extra == "docs"
 Provides-Extra: extra
+Requires-Dist: numpngw; extra == "extra"
+Requires-Dist: stable-baselines3; extra == "extra"
