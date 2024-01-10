@@ -362,12 +362,15 @@ class PeginHole(Task):
         # step_ratio = math.tanh(self.r_step / 100)
         step_val = _step_val * step_ratio
         # print(step_val)
+        if len(achieved_goal.shape) > 1:
+            target_bottom = np.tile(target_bottom, (achieved_goal.shape[0], 1))
+            target_top = np.tile(target_top, (achieved_goal.shape[0], 1))
         d_bottom = distance(achieved_goal * scaled_ratio_bot, target_bottom * scaled_ratio_bot)
         d_center = distance(achieved_goal * scaled_ratio_mid, desired_goal * scaled_ratio_mid)
         d_top = distance(achieved_goal * scaled_ratio_top, target_top * scaled_ratio_top)
-        r_top = (1 - math.tanh(50 * d_top)) * 0.2
-        r_center = (1 - math.tanh(30 * d_center)) * 0.3
-        r_bot = (1 - math.tanh(10 * d_bottom))
+        r_top = (1 - np.tanh(50 * d_top)) * 0.2
+        r_center = (1 - np.tanh(30 * d_center)) * 0.3
+        r_bot = (1 - np.tanh(10 * d_bottom))
         #
         # _r_top = -math.tanh(10 * d_top) * 0.1
         # _r_center = -math.tanh(30 * d_center) * 0.15
@@ -380,29 +383,29 @@ class PeginHole(Task):
         #     _r_top = 0
         # if achieved_goal[2] < desired_goal[2]:
         #     _r_center = 0
-
-        if r_bot > 0.865: # this is used for early stop method, which need to be changed when switching to other methods.
-            self.suc_ratio += 0.1
-            get_suc = 2.5 * self.suc_ratio
-        # elif r_bot > 0.851:
-        #     self.suc_ratio = 1.5
-        #     get_suc = 1
-        else:
-            self.suc_ratio = 1
-            get_suc = 0
-        scaled_ratio_toptop = np.array([8, 8, 0.1])
-        d_objtop_holetop = distance(obj_top * scaled_ratio_toptop, target_top * scaled_ratio_toptop)
-        r_objtop_holetop = (1 - math.tanh(20 * d_objtop_holetop)) * 0.1
-
-        left_step = total_steps - self.r_step
-        threashold_step = 70
-        if left_step < threashold_step:
-            step_v = (left_step - threashold_step) / (threashold_step * 70)
-        else:
-            step_v = 0
-        # print("get suc:", get_suc)
-        # print("step_v:", step_v)
-
+#------------------
+        # if r_bot.any() > 0.865: # this is used for early stop method, which need to be changed when switching to other methods.
+        #     self.suc_ratio += 0.1
+        #     get_suc = 2.5 * self.suc_ratio
+        # # elif r_bot > 0.851:
+        # #     self.suc_ratio = 1.5
+        # #     get_suc = 1
+        # else:
+        #     self.suc_ratio = 1
+        #     get_suc = 0
+        # scaled_ratio_toptop = np.array([8, 8, 0.1])
+        # d_objtop_holetop = distance(obj_top * scaled_ratio_toptop, target_top * scaled_ratio_toptop)
+        # r_objtop_holetop = (1 - math.tanh(20 * d_objtop_holetop)) * 0.1
+        #
+        # left_step = total_steps - self.r_step
+        # threashold_step = 70
+        # if left_step < threashold_step:
+        #     step_v = (left_step - threashold_step) / (threashold_step * 70)
+        # else:
+        #     step_v = 0
+        # # print("get suc:", get_suc)
+        # # print("step_v:", step_v)
+#----------------
 
         # self.total_step += 1
         # print("total step:", self.total_step)
@@ -412,7 +415,8 @@ class PeginHole(Task):
         # return r_top + r_center + r_bot + g_top + g_mid + self.r_step
         # return (r_top + r_center + r_bot) + get_suc + r_objtop_holetop
         # return ((_r_top + _r_center + _r_bot) * step_ratio/step_ratio)/1 + get_suc
-        return (_r_top + _r_center + _r_bot) + get_suc + step_gain
+        # return (_r_top + _r_center + _r_bot) + get_suc + step_gain
+        return (_r_top + _r_center + _r_bot)
 
         # # print(achieved_goal[2] - desired_goal[2])
         # # print(d)

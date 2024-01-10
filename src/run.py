@@ -24,6 +24,7 @@ import numpy as np
 
 from loguru import logger
 
+
 parser = argparse.ArgumentParser(description="runner for UR_Gym")
 parser.add_argument('-a', '--alg', type=str, default="TD3", help="pick the used algorithm")
 parser.add_argument('-t', '--total_timesteps', type=int, default=5e5, help='the total trainning time steps')
@@ -53,8 +54,8 @@ parser.add_argument('-ac', '--admittance_control', action='store_true', help='en
 
 args = parser.parse_args()
 
-policy_kwargs = dict(activation_fn=th.nn.Tanh,
-                     net_arch=dict(pi=[128, 128], vf=[128, 128]))
+# policy_kwargs = dict(activation_fn=th.nn.Tanh,
+#                      net_arch=dict(pi=[128, 128], vf=[128, 128]))
 
 # there are some hyperparameters in the whole environment. We can define them here or not.
 ft_LowPass_damp = 0.8  # the damp of low pass filter for F/T sensor
@@ -253,7 +254,7 @@ for i in range(1):
                 [reward_surface_top_weight, reward_surface_bot_weight, reward_surface_mid_weight]),
         )
         log_dir = root_dir_tensorboard + saved_model_dir + running_time
-
+        check_env(env)
         if args.alg == 'TD3':
             print("using TD3 algorithm.")
             model = TD3(
@@ -270,7 +271,7 @@ for i in range(1):
         elif args.alg == 'PPO':
             print("using PPO algorithm.")
             model = PPO(
-                policy="MlpPolicy",
+                policy="MultiInputPolicy",
                 env=env,
                 verbose=1,
                 ent_coef=ent_coef,
@@ -280,7 +281,7 @@ for i in range(1):
                 n_steps=2048,
                 batch_size=64,
                 n_epochs=10,
-                policy_kwargs=policy_kwargs,
+                # policy_kwargs=policy_kwargs,
                 # target_kl=0.0027,
                 tensorboard_log=log_dir)
             # model = RecurrentPPO(
@@ -366,26 +367,27 @@ for i in range(1):
         elif args.alg == 'SAC':
             model = TD3.load(root_dir_model + args.model_dir, env=env)
         # plt.figure(1)
-        obs, _ = env.reset()
+        obs = env.reset()
 
-        observation_shape = obs.shape
-        obs_record = [np.zeros(observation_shape)]
+        # observation_shape = obs.shape
+        # obs_record = [np.zeros(observation_shape)]
         # print(obs_record)
         i = 0
         while i < 10:
             action, _state = model.predict(obs, deterministic=True)
-            obs, reward, done, _, info = env.step(action)
-            obs_record = np.r_[obs_record, [obs]]
+            # obs, reward, done, _, info = env.step(action)
+            obs, reward, done, info = env.step(action)
+            # obs_record = np.r_[obs_record, [obs]]
             if done:
                 # np.save("obs.npy", obs_record)
                 i += 1
                 print('Done')
-                obs, _ = env.reset()
+                obs = env.reset()
             # plt.subplot(1, 2, 1)
-            # plt.show()
-            if args.record_obs is True:
-                mkdir(recording_path)
-                np.save(recording_path + str(i) + '.npy', obs_record)
+            # # plt.show()
+            # if args.record_obs is True:
+            #     mkdir(recording_path)
+            #     np.save(recording_path + str(i) + '.npy', obs_record)
 
     elif args.realrobot is True:
         env = gym.make(

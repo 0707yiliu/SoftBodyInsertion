@@ -156,24 +156,27 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         self.one_episode = 0
         obs = self._get_obs()  # required for init; seed can be changed later
         # self._reset_first = True
-        # observation_shape = obs["observation"].shape
-        # achieved_goal_shape = obs["achieved_goal"].shape
-        # desired_goal_shape = obs["achieved_goal"].shape
-        # self.observation_space = gym.spaces.Dict(
-        #     dict(
-        #         observation=gym.spaces.Box(-10.0, 10.0, shape=observation_shape, dtype=np.float32),
-        #         desired_goal=gym.spaces.Box(-10.0, 10.0, shape=achieved_goal_shape, dtype=np.float32),
-        #         achieved_goal=gym.spaces.Box(-10.0, 10.0, shape=desired_goal_shape, dtype=np.float32),
-        #     )
-        # )
-        
-        observation_shape = obs.shape
+        # -----------
+        observation_shape = obs["observation"].shape
+        achieved_goal_shape = obs["achieved_goal"].shape
+        desired_goal_shape = obs["achieved_goal"].shape
+        self.observation_space = gym.spaces.Dict(
+            dict(
+                observation=gym.spaces.Box(-10.0, 10.0, shape=observation_shape, dtype=np.float32),
+                desired_goal=gym.spaces.Box(-10.0, 10.0, shape=achieved_goal_shape, dtype=np.float32),
+                achieved_goal=gym.spaces.Box(-10.0, 10.0, shape=desired_goal_shape, dtype=np.float32),
+            )
+        )
+        # ------------
+        # observation_shape = obs.shape
         # self.obs_record = [np.zeros(observation_shape)]
         # print("observation shape:", observation_shape)
         # print(self.obs_record)
         # print(observation_shape)
-        self.observation_space = spaces.Box(-1, 1.0, shape=observation_shape, dtype=np.float32)
-        print("obs space:",self.observation_space)
+        # self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=observation_shape, dtype=np.float32)
+        # self.observation_space = spaces.Box(-1.0 * np.ones(observation_shape[0]), 1.0 * np.ones(observation_shape[0]), shape=observation_shape, dtype=np.float32)
+
+        print("obs space:", self.observation_space)
         self.action_space = self.robot.action_space
 
         # print(self.observation_space, self.action_space)
@@ -182,7 +185,7 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         # print("over here")
 
 
-    def reset(self, seed: Optional[int] = None, options={}) -> tuple:
+    def reset(self, seed: Optional[int] = None, options={}):
         # self.task.np_random, seed = gym.utils.seeding.np_random(seed)
         # with self.sim.no_rendering():
         #     self.robot.reset()
@@ -194,7 +197,8 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         info = dict()
         # if self.init_grasping:
         #     self.robot._init_grasping()
-        return self._get_obs(), info
+        # print(self._get_obs())
+        return self._get_obs()
     
     def _get_obs(self) -> Dict[str, np.ndarray]:
         robot_obs = self.robot.get_obs()  # robot state
@@ -202,18 +206,18 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
         # print("robot obs:",robot_obs)
         # print("task obs:",task_obs)
         observation = np.concatenate([robot_obs, task_obs])
-        
+
         # if self._reset_first is True:
         #     self.obs_record = np.r_[self.obs_record, [observation]]
             # print(self.obs_record)
 
         achieved_goal = self.task.get_achieved_goal()
-        # return {
-        #     "observation": observation,
-        #     "achieved_goal": achieved_goal,
-        #     "desired_goal": self.task.get_goal(),
-        # }
-        return observation
+        return {
+            "observation": observation,
+            "achieved_goal": achieved_goal,
+            "desired_goal": self.task.get_goal(),
+        }
+        # return observation
 
     def step(self, action: np.ndarray) -> Tuple[Dict[str, np.ndarray], float, bool, Dict[str, Any]]:
         self.robot.set_action(action)
@@ -274,5 +278,5 @@ class RobotTaskEnv(gym_robotics.GoalEnv):
             if self.one_episode >= 400:
                 done = True
         truncated = False
-        return obs, reward, done, truncated, info
+        return obs, reward, done, info
     
